@@ -2,3 +2,5 @@ numpy~=1.22.0
 setuptools~=57.0.0
 gym~=0.21.0
 PettingZoo~=1.14.0
+dm-sonnet~=2.0.0
+dm-launchpad~=4.1.0
