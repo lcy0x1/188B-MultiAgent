@@ -15,6 +15,7 @@ if __name__ == '__main__':
 
     trainer = ppo.PPOTrainer(env="vehicle")
     trainer.setup()
+    trainer.reset()
     result = trainer.train()
     print(pretty_print(result))
     pass
