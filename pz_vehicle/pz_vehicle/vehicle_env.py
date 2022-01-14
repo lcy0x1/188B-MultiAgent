@@ -85,13 +85,13 @@ class AgentAction:
             ind = ind + 1
 
 
-def env(config: Config):
+def env(config):
     """
     The env function often wraps the environment in wrappers by default.
     You can find full documentation for these methods
     elsewhere in the developer documentation.
     """
-    environment = VehicleEnv(config)
+    environment = VehicleEnv(Config(config))
     environment = wrappers.CaptureStdoutWrapper(environment)
     environment = wrappers.AssertOutOfBoundsWrapper(environment)
     environment = wrappers.OrderEnforcingWrapper(environment)
