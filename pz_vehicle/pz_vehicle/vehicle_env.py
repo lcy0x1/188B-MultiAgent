@@ -112,7 +112,7 @@ class VehicleEnv(AECEnv):
             for agent in self.possible_agents
         }
         self._action_spaces = {agent: Box(0, 1, (config.node * 2 - 1,)) for agent in self.possible_agents}
-        self._random_func: RandomState = seeding.np_random(config.seed)
+        self._random_func, _ = seeding.np_random(config.seed)
 
         self.agents = self.possible_agents[:]
         self.rewards = {agent: 0 for agent in self.agents}
