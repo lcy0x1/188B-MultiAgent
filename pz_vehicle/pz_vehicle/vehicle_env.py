@@ -107,11 +107,11 @@ class VehicleEnv(AECEnv):
         super().__init__()
         self.config = config
         self.possible_agents = [f"node_{i}" for i in range(config.node)]
-        self._observation_spaces = {
+        self._internal_observation_spaces = {
             agent: MultiDiscrete([config.vehicle + 1] + [config.max_queue + 1 for _ in range(config.node - 1)])
             for agent in self.possible_agents
         }
-        self._action_spaces = {agent: Box(0, 1, (config.node * 2 - 1,)) for agent in self.possible_agents}
+        self._internal_action_spaces = {agent: Box(0, 1, (config.node * 2 - 1,)) for agent in self.possible_agents}
         self._random_func, _ = seeding.np_random(config.seed)
 
         self.agents = self.possible_agents[:]
@@ -186,11 +186,11 @@ class VehicleEnv(AECEnv):
 
     def observation_space(self, agent):
         # vehicle (1) goes first, queue (n-1) goes second
-        return self._observation_spaces[agent]
+        return self._internal_observation_spaces[agent]
 
     def action_space(self, agent):
         # vehicle action (n) goes first, price (n-1) goes second
-        return self._action_spaces[agent]
+        return self._internal_action_spaces[agent]
 
     def _env_step(self):
         self.num_moves += 1
