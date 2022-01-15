@@ -92,8 +92,8 @@ def env(config):
     elsewhere in the developer documentation.
     """
     environment = VehicleEnv(Config(config))
-    environment = wrappers.CaptureStdoutWrapper(environment)
     environment = wrappers.AssertOutOfBoundsWrapper(environment)
+    environment = wrappers.CaptureStdoutWrapper(environment)
     environment = wrappers.OrderEnforcingWrapper(environment)
     return environment
 
