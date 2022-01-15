@@ -100,7 +100,8 @@ def env(config):
 
 class VehicleEnv(AECEnv):
     metadata = {
-        "name": 'vehicle_v0'
+        "name": 'vehicle_v0',
+        "render.modes": ["human"]
     }
 
     def __init__(self, config: Config):
