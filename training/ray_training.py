@@ -12,6 +12,7 @@ if __name__ == '__main__':
     config_data = json.load(open(pkg_resources.resource_filename(__name__, "./config.json")))
     register_env('vehicle', lambda config: PettingZooEnv(vehicle_env.env(config_data, 0)))
     tf_config = ppo.DEFAULT_CONFIG.copy()
+    tf_config["num_gpus"] = 2
     trainer = ppo.PPOTrainer(config=tf_config, env="vehicle")
     log_list = []
     for i in range(10000):
