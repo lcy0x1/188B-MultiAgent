@@ -85,13 +85,13 @@ class AgentAction:
             ind = ind + 1
 
 
-def env(config):
+def env(config, seed=0):
     """
     The env function often wraps the environment in wrappers by default.
     You can find full documentation for these methods
     elsewhere in the developer documentation.
     """
-    environment = VehicleEnv(Config(config))
+    environment = VehicleEnv(Config(config, seed))
     environment = wrappers.CaptureStdoutWrapper(environment)
     environment = wrappers.OrderEnforcingWrapper(environment)
     return environment
@@ -203,22 +203,25 @@ class VehicleEnv(AECEnv):
             for j in range(self.config.node):
                 if i == j:
                     continue
+                ind = j
+                if j < i:
+                    ind += 1
                 self._states[i][0] -= act.motion[j]
                 self._states[j][0] += act.motion[j]
-                self._states[i][j + 1] -= act.motion[j]
-                if self._states[i][j + 1] < 0:
-                    self._states[i][j + 1] = 0
+                self._states[i][ind] -= act.motion[j]
+                if self._states[i][ind] < 0:
+                    self._states[i][ind] = 0
                 cost += self.config.operation_cost * act.motion[j]
-                wait_pen += self.config.waiting_penalty * self._states[i][j + 1]
+                wait_pen += self.config.waiting_penalty * self._states[i][ind]
 
                 request = min(self.config.poisson_cap,
                               self._random_func.poisson(self.config.poisson_param * (1 - act.price[j])))
-                act_req = min(request, self.config.max_queue - self._states[i][j + 1])
+                act_req = min(request, self.config.max_queue - self._states[i][ind])
                 overf += (request - act_req) * self.config.overflow
-                self._states[i][j + 1] += act_req
+                self._states[i][ind] += act_req
                 reward += act_req * act.price[j]
             total = reward - cost - wait_pen - overf
             self.rewards[self.agents[i]] = total
             self._cumulative_rewards[self.agents[i]] += total
             self.infos[self.agents[i]] = {"cost": cost, "waiting_penalty": wait_pen, "overflow": overf,
-                                          "reward": reward}
+                                          "reward": reward, "action.motion": act.motion, "action.price": act.price}

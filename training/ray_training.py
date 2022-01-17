@@ -8,12 +8,11 @@ from ray.rllib.agents import ppo
 
 from pz_vehicle import vehicle_env
 
-
 if __name__ == '__main__':
     config_data = json.load(open(pkg_resources.resource_filename(__name__, "./config.json")))
-    register_env('vehicle', lambda config: PettingZooEnv(vehicle_env.env(config_data)))
-
-    trainer = ppo.PPOTrainer(env="vehicle")
+    register_env('vehicle', lambda config: PettingZooEnv(vehicle_env.env(config_data, 0)))
+    tf_config = ppo.DEFAULT_CONFIG.copy()
+    trainer = ppo.PPOTrainer(config=tf_config, env="vehicle")
     trainer.setup()
     trainer.reset()
     result = trainer.train()
