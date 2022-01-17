@@ -11,6 +11,7 @@ if __name__ == '__main__':
 
     env.reset()
     agents = env.agents
+    print(agents)
     print('Agent 1 state: ', env.observe(agents[0]))
     print('Agent 2 state: ', env.observe(agents[1]))
     env.step(np.array([1, 1, 0.5]))

@@ -16,7 +16,7 @@ if __name__ == '__main__':
     for i in range(10000):
         # Perform one iteration of training the policy with PPO
         result = trainer.train()
-        print(pretty_print(result))
+        print(pretty_print(result["info.learner.default_policy.learner_stats"]))
 
         if i % 1000 == 0:
             checkpoint = trainer.save()
