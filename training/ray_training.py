@@ -18,12 +18,12 @@ if __name__ == '__main__':
     for i in range(10000):
         # Perform one iteration of training the policy with PPO
         result = trainer.train()
-        status = result["info"]["learner"]["default_policy"]["learner_stats"]
-        print(pretty_print(status))
+        print(pretty_print(result))
 
         if i % 100 == 0:
             checkpoint = trainer.save()
             print("checkpoint saved at", checkpoint)
+            status = result["info"]["learner"]["default_policy"]["learner_stats"]
             status = {"policy_loss": str(status["policy_loss"]),
                       "value_function_loss": str(status["vf_loss"]),
                       "total_loss": str(status["total_loss"])}
