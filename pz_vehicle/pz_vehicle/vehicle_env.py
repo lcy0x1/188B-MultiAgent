@@ -92,6 +92,7 @@ def env(config, seed=0):
     elsewhere in the developer documentation.
     """
     environment = VehicleEnv(Config(config, seed))
+    environment.reset()
     environment = wrappers.CaptureStdoutWrapper(environment)
     environment = wrappers.OrderEnforcingWrapper(environment)
     return environment
