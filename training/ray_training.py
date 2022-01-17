@@ -13,6 +13,12 @@ if __name__ == '__main__':
     register_env('vehicle', lambda config: PettingZooEnv(vehicle_env.env(config_data, 0)))
     tf_config = ppo.DEFAULT_CONFIG.copy()
     trainer = ppo.PPOTrainer(config=tf_config, env="vehicle")
-    result = trainer.train()
-    print(pretty_print(result))
+    for i in range(10000):
+        # Perform one iteration of training the policy with PPO
+        result = trainer.train()
+        print(pretty_print(result))
+
+        if i % 1000 == 0:
+            checkpoint = trainer.save()
+            print("checkpoint saved at", checkpoint)
     pass
