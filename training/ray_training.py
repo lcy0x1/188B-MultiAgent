@@ -18,7 +18,12 @@ if __name__ == '__main__':
     tf_num_gpus = len(tf_utils.get_gpu_devices())
     tc_num_gpus = torch.cuda.device_count()
     print("Number of GPU detected - TensorFlow: ", tf_num_gpus, " Torch: ", tc_num_gpus)
-    tf_config["num_gpus"] = tf_num_gpus
+    if tc_num_gpus > tf_num_gpus:
+        tf_config["framework"] = "torch"
+        tf_config["num_gpus"] = tc_num_gpus
+    else:
+        tf_config["framework"] = "tf"
+        tf_config["num_gpus"] = tf_num_gpus
     trainer = ppo.PPOTrainer(config=tf_config, env="vehicle")
     log_list = []
     for i in range(10000):
