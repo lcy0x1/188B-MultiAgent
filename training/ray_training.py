@@ -1,5 +1,6 @@
 import json
 import pkg_resources
+import torch
 
 from ray.rllib.utils import tf_utils
 
@@ -14,9 +15,10 @@ if __name__ == '__main__':
     config_data = json.load(open(pkg_resources.resource_filename(__name__, "./config.json")))
     register_env('vehicle', lambda config: PettingZooEnv(vehicle_env.env(config_data, 0)))
     tf_config = ppo.DEFAULT_CONFIG.copy()
-    num_gpus = len(tf_utils.get_gpu_devices())
-    print("Number of GPU detected: ", num_gpus)
-    tf_config["num_gpus"] = num_gpus
+    tf_num_gpus = len(tf_utils.get_gpu_devices())
+    tc_num_gpus = torch.cuda.device_count()
+    print("Number of GPU detected - TensorFlow: ", tf_num_gpus, " Torch: ", tc_num_gpus)
+    tf_config["num_gpus"] = tf_num_gpus
     trainer = ppo.PPOTrainer(config=tf_config, env="vehicle")
     log_list = []
     for i in range(10000):
