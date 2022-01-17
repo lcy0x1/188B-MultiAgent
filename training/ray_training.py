@@ -13,12 +13,13 @@ from pz_vehicle import vehicle_env
 
 if __name__ == '__main__':
     config_data = json.load(open(pkg_resources.resource_filename(__name__, "./config.json")))
+    use_torch = config_data["use_torch"]
     register_env('vehicle', lambda config: PettingZooEnv(vehicle_env.env(config_data, 0)))
     tf_config = ppo.DEFAULT_CONFIG.copy()
     tf_num_gpus = len(tf_utils.get_gpu_devices())
     tc_num_gpus = torch.cuda.device_count()
     print("Number of GPU detected - TensorFlow: ", tf_num_gpus, " Torch: ", tc_num_gpus)
-    if tc_num_gpus > tf_num_gpus:
+    if use_torch:
         tf_config["framework"] = "torch"
         tf_config["num_gpus"] = tc_num_gpus
     else:
