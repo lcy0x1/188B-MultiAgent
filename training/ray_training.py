@@ -21,4 +21,6 @@ if __name__ == '__main__':
         if i % 1000 == 0:
             checkpoint = trainer.save()
             print("checkpoint saved at", checkpoint)
+        if i % 10 == 0:
+            print('progress: ', i / 100, '%')
     pass
