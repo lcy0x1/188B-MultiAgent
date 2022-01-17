@@ -1,6 +1,8 @@
 import json
 import pkg_resources
 
+from ray.rllib.utils import tf_utils
+
 from ray.tune.registry import register_env
 from ray.tune.logger import pretty_print
 from ray.rllib.env import PettingZooEnv
@@ -12,7 +14,9 @@ if __name__ == '__main__':
     config_data = json.load(open(pkg_resources.resource_filename(__name__, "./config.json")))
     register_env('vehicle', lambda config: PettingZooEnv(vehicle_env.env(config_data, 0)))
     tf_config = ppo.DEFAULT_CONFIG.copy()
-    tf_config["num_gpus"] = 2
+    num_gpus = tf_utils.get_gpu_devices()
+    print("Number of GPU detected: ", num_gpus)
+    tf_config["num_gpus"] = num_gpus
     trainer = ppo.PPOTrainer(config=tf_config, env="vehicle")
     log_list = []
     for i in range(10000):
