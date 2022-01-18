@@ -55,7 +55,7 @@ class VehicleEnv(gym.Env):
         self.poisson_param = self.config["poisson_param"]
         self.operating_cost = self.config["operation_cost"]
         self.waiting_penalty = self.config["waiting_penalty"]
-        self.queue_size = self.config["queue_size"]
+        self.queue_size = self.config["max_queue"]
         self.overflow = self.config["overflow"]
         self.poisson_cap = self.config["poisson_cap"]
         self.vehicles = [0 for _ in range(self.node)]
