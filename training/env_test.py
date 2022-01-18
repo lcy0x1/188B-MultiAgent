@@ -8,7 +8,7 @@ from pz_vehicle import vehicle_env
 if __name__ == '__main__':
     config_data = json.load(open(pkg_resources.resource_filename(__name__, "./config.json")))
     env = vehicle_env.env(config_data, 0)
-
+    print(config_data["vehicle"])
     env.reset()
     agents = env.agents
     print(agents)

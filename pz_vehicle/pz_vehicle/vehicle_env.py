@@ -22,6 +22,11 @@ class Config:
 
     def gen_distribution(self, random_func):
         arr = random_func.random_sample(self.node)
+        sums = 0
+        for i in range(self.node):
+            sums += arr[i]
+        for i in range(self.node):
+            arr[i] /= sums
         ans = [0 for _ in range(self.node)]
         rem = self.vehicle
         for i in range(self.node):
