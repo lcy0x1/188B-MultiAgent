@@ -9,7 +9,7 @@ from gym_vehicle import envs
 
 if __name__ == '__main__':
 
-    register_env('gym_vehicle', envs.VehicleEnv)
+    register_env('gym_vehicle', lambda config: envs.VehicleEnv())
     tf_config = ppo.DEFAULT_CONFIG.copy()
     trainer = ppo.PPOTrainer(config=tf_config, env="gym_vehicle")
     log_list = []
