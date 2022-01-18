@@ -48,7 +48,9 @@ class VehicleAction:
 class VehicleEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, config, seed):
+    def __init__(self, config=None, seed=0):
+        if config is None:
+            config = json.load(open(pkg_resources.resource_filename(__name__, "./config.json")))
         self.config = config
         self.node = self.config["node"]
         self.vehicle = self.config["vehicle"]
