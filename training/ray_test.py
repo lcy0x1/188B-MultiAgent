@@ -1,7 +1,7 @@
 import json
 import pkg_resources
+from datetime import datetime
 
-from ray.rllib.utils import tf_utils
 from ray.tune.registry import register_env
 from ray.tune.logger import pretty_print
 from ray.rllib.agents import ppo
@@ -26,7 +26,8 @@ if __name__ == '__main__':
             status = {"policy_loss": str(status["policy_loss"]),
                       "value_function_loss": str(status["vf_loss"]),
                       "total_loss": str(status["total_loss"])}
-            log_list.append({"step": i, "status": status, "checkpoint": checkpoint})
+            log_list.append({"step": i, "status": status, "checkpoint": checkpoint,
+                             "timestamp": str(datetime.fromtimestamp(result["timestamp"]))})
             out_file = open("./gym_log.json", "w")
             json.dump(log_list, out_file)
             out_file.close()
