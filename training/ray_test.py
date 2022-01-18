@@ -1,4 +1,5 @@
 import json
+import pkg_resources
 
 from ray.rllib.utils import tf_utils
 from ray.tune.registry import register_env
@@ -8,8 +9,8 @@ from ray.rllib.agents import ppo
 from gym_vehicle import envs
 
 if __name__ == '__main__':
-
-    register_env('gym_vehicle', lambda config: envs.VehicleEnv())
+    config_data = json.load(open(pkg_resources.resource_filename(__name__, "./config.json")))
+    register_env('gym_vehicle', lambda config: envs.VehicleEnv(config_data, 0))
     tf_config = ppo.DEFAULT_CONFIG.copy()
     trainer = ppo.PPOTrainer(config=tf_config, env="gym_vehicle")
     log_list = []
@@ -26,6 +27,6 @@ if __name__ == '__main__':
                       "value_function_loss": str(status["vf_loss"]),
                       "total_loss": str(status["total_loss"])}
             log_list.append({"step": i, "status": status, "checkpoint": checkpoint})
-            out_file = open("log.json", "w")
+            out_file = open("./gym_log.json", "w")
             json.dump(log_list, out_file)
             out_file.close()

@@ -48,12 +48,12 @@ class VehicleAction:
 class VehicleEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self):
-        self.config = json.load(open(pkg_resources.resource_filename(__name__, "./config.json")))
+    def __init__(self, config, seed):
+        self.config = config
         self.node = self.config["node"]
         self.vehicle = self.config["vehicle"]
         self.poisson_param = self.config["poisson_param"]
-        self.operating_cost = self.config["operating_cost"]
+        self.operating_cost = self.config["operation_cost"]
         self.waiting_penalty = self.config["waiting_penalty"]
         self.queue_size = self.config["queue_size"]
         self.overflow = self.config["overflow"]
@@ -65,6 +65,7 @@ class VehicleEnv(gym.Env):
             [self.vehicle + 1 for _ in range(self.node)] +
             [self.queue_size + 1 for _ in range(self.node * (self.node - 1))])
         self.action_space = spaces.Box(0, 1, (self.node * self.node + self.node * (self.node - 1),))
+        self.seed(seed)
 
     def seed(self, seed=None):
         self.random, _ = seeding.np_random(seed)
