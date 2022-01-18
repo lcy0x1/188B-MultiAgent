@@ -14,7 +14,7 @@ from pz_vehicle import vehicle_env
 if __name__ == '__main__':
     config_data = json.load(open(pkg_resources.resource_filename(__name__, "./config.json")))
     use_torch = config_data["use_torch"]
-    register_env('vehicle', lambda config: PettingZooEnv(vehicle_env.env(config_data, 0)))
+    register_env('pz_vehicle', lambda config: PettingZooEnv(vehicle_env.env(config_data, 0)))
     tf_config = ppo.DEFAULT_CONFIG.copy()
     tf_num_gpus = len(tf_utils.get_gpu_devices())
     tc_num_gpus = torch.cuda.device_count()
@@ -25,7 +25,7 @@ if __name__ == '__main__':
     else:
         tf_config["framework"] = "tf"
         tf_config["num_gpus"] = tf_num_gpus
-    trainer = ppo.PPOTrainer(config=tf_config, env="vehicle")
+    trainer = ppo.PPOTrainer(config=tf_config, env="pz_vehicle")
     log_list = []
     for i in range(10000):
         # Perform one iteration of training the policy with PPO
