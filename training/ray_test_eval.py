@@ -23,6 +23,7 @@ if __name__ == '__main__':
         print("step: ", i)
         print(obs)
         action = trainer.compute_single_action(obs)
+        print(action)
         obs, reward, done, info = env.step(action)
         total_reward += reward
     print(total_reward / n)
