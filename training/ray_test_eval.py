@@ -13,7 +13,6 @@ if __name__ == '__main__':
     register_env('gym_vehicle', lambda config: envs.VehicleEnv(config_data, 0))
     tf_config = ppo.DEFAULT_CONFIG.copy()
     tf_config["explore"] = False
-    print(tf_config["normalize_actions"])
     trainer = ppo.PPOTrainer(config=tf_config, env="gym_vehicle")
     trainer.restore("../../ray_results/PPO_gym_vehicle_2022-01-18_00-25-13gc7rendc/checkpoint_000501/checkpoint-501")
     env = envs.VehicleEnv(config_data, 0)
