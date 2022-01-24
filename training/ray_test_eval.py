@@ -12,11 +12,9 @@ if __name__ == '__main__':
     config_data = json.load(open(pkg_resources.resource_filename(__name__, "./config.json")))
     register_env('gym_vehicle', lambda config: envs.VehicleEnv(config_data, 0))
     tf_config = ppo.DEFAULT_CONFIG.copy()
+    tf_config["explore"] = False
     trainer = ppo.PPOTrainer(config=tf_config, env="gym_vehicle")
-    # log_file = open("./gym_log.json", "r")
-    # logs = json.load(log_file)
-    trainer.restore(
-        "../../ray_results/PPO_gym_vehicle_2022-01-18_00-25-13gc7rendc/checkpoint_000501/checkpoint-501")  # logs[-1]["checkpoint"])
+    trainer.restore("../../ray_results/PPO_gym_vehicle_2022-01-18_00-25-13gc7rendc/checkpoint_000501/checkpoint-501")
     env = envs.VehicleEnv(config_data, 0)
     obs = env.reset()
     total_reward = 0
