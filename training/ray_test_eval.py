@@ -21,7 +21,7 @@ if __name__ == '__main__':
     n = 10000
     for i in range(n):
         print("step: ", i)
-        action = trainer.compute_action(obs)
+        action = trainer.compute_single_action(obs)
         obs, reward, done, info = env.step(action)
         total_reward += reward
     print(total_reward / n)
