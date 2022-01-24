@@ -16,7 +16,7 @@ class VehicleAction:
         for i in range(env.node):
             rsum = 0
             for j in range(env.node):
-                tmp[j] = arr[ind]
+                tmp[j] = min(1, max(0, arr[ind]))
                 rsum = rsum + arr[ind]
                 ind = ind + 1
             rsum = max(1e-5, rsum)
@@ -41,7 +41,7 @@ class VehicleAction:
             for j in range(env.node):
                 if i == j:
                     continue
-                self.price[i][j] = arr[ind]
+                self.price[i][j] = min(1, max(0, arr[ind]))
                 ind = ind + 1
 
 
