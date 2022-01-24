@@ -17,7 +17,7 @@ class VehicleAction:
             rsum = 0
             for j in range(env.node):
                 tmp[j] = min(1, max(0, arr[ind]))
-                rsum = rsum + arr[ind]
+                rsum = rsum + tmp[j]
                 ind = ind + 1
             rsum = max(1e-5, rsum)
             rem: int = env.vehicles[i]
