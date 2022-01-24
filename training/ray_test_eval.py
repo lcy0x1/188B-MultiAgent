@@ -13,15 +13,16 @@ if __name__ == '__main__':
     register_env('gym_vehicle', lambda config: envs.VehicleEnv(config_data, 0))
     tf_config = ppo.DEFAULT_CONFIG.copy()
     trainer = ppo.PPOTrainer(config=tf_config, env="gym_vehicle")
-    #log_file = open("./gym_log.json", "r")
-    #logs = json.load(log_file)
-    trainer.restore("../../ray_results/PPO_gym_vehicle_2022-01-18_00-25-13gc7rendc/checkpoint_000501/checkpoint-501")#logs[-1]["checkpoint"])
+    # log_file = open("./gym_log.json", "r")
+    # logs = json.load(log_file)
+    trainer.restore(
+        "../../ray_results/PPO_gym_vehicle_2022-01-18_00-25-13gc7rendc/checkpoint_000501/checkpoint-501")  # logs[-1]["checkpoint"])
     env = envs.VehicleEnv(config_data, 0)
-    env.reset()
-    obs = env.to_observation()
+    obs = env.reset()
     total_reward = 0
     n = 10000
     for i in range(n):
+        print("step: ", i)
         action = trainer.compute_action(obs)
         obs, reward, done, info = env.step(action)
         total_reward += reward
