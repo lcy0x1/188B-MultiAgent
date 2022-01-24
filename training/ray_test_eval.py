@@ -13,7 +13,7 @@ if __name__ == '__main__':
     register_env('gym_vehicle', lambda config: envs.VehicleEnv(config_data, 0))
     tf_config = ppo.DEFAULT_CONFIG.copy()
     trainer = ppo.PPOTrainer(config=tf_config, env="gym_vehicle")
-    log_file = open("./gym_log.json", "w")
+    log_file = open("./gym_log.json", "r")
     logs = json.load(log_file)
     trainer.restore(logs[-1]["checkpoint"])
     env = envs.VehicleEnv(config_data, 0)
