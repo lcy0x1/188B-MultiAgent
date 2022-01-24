@@ -19,6 +19,7 @@ if __name__ == '__main__':
     obs = env.reset()
     total_reward = 0
     n = 10000
+    print(env.action_space)
     for i in range(n):
         print("step: ", i)
         print(obs)
