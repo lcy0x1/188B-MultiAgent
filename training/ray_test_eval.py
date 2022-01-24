@@ -21,8 +21,8 @@ if __name__ == '__main__':
     n = 10000
     print(env.action_space)
     for i in range(n):
-        action = trainer.compute_single_action(obs)
-        # TODO clip action?
+        action = trainer.compute_single_action(obs, clip_actions=True)
+        print(action)
         obs, reward, done, info = env.step(action)
         total_reward += reward
     print(total_reward / n)

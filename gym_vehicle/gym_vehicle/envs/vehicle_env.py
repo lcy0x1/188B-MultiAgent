@@ -9,7 +9,6 @@ import json
 class VehicleAction:
 
     def __init__(self, env, arr):
-        print(arr)
         self.motion = [[0 for _ in range(env.node)] for _ in range(env.node)]
         self.price = [[0.0 for _ in range(env.node)] for _ in range(env.node)]
         ind = 0
