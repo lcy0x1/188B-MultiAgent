@@ -10,4 +10,7 @@ pip install gputil
 pip3 install torch torchvision torchaudio
 pip install -e pz_vehicle
 pip install -e gym_vehicle
+pip install stable-baseline3
+pip uninstall gym
+pip install gym
 ```
