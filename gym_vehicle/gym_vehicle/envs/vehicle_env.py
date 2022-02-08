@@ -62,10 +62,11 @@ class VehicleEnv(gym.Env):
         self.poisson_cap = self.config["poisson_cap"]
         self.vehicles = [0 for _ in range(self.node)]
         self.queue = [[0 for _ in range(self.node)] for _ in range(self.node)]
+        self.over = 0
         self.random = None
         self.observation_space = spaces.MultiDiscrete(
             [self.vehicle + 1 for _ in range(self.node)] +
-            [self.queue_size + 1 for _ in range(self.node * (self.node - 1))])
+            [self.queue_size + 1 for _ in range(self.node * (self.node - 1))]+[2])
         self.action_space = spaces.Box(0, 1, (self.node * self.node + self.node * (self.node - 1),))
         self.seed(seed)
 
@@ -83,19 +84,22 @@ class VehicleEnv(gym.Env):
                 if i == j:
                     continue
                 veh_motion = action.motion[i][j]
-                self.vehicles[i] = self.vehicles[i] - veh_motion
-                self.vehicles[j] = self.vehicles[j] + veh_motion
+                self.vehicles[i] -= veh_motion
+                self.vehicles[j] += veh_motion
                 self.queue[i][j] = max(0, self.queue[i][j] - veh_motion)
                 op_cost += veh_motion * self.operating_cost
                 wait_pen += self.queue[i][j] * self.waiting_penalty
                 price = action.price[i][j]
                 request = min(self.poisson_cap, self.random.poisson(self.poisson_param * (1 - price)))
-                act_req = min(request, self.queue_size - self.queue[i][j])
+                act_req = request
+                if self.queue[i][j] + act_req > self.queue_size:
+                    act_req = 0
                 overf += (request - act_req) * self.overflow
                 self.queue[i][j] = self.queue[i][j] + act_req
                 rew += act_req * action.price[i][j]
+        self.over = max(self.over, min(overf, 1))
         debuf_info = {'reward': rew, 'operating_cost': op_cost, 'wait_penalty': wait_pen, 'overflow': overf}
-        return self.to_observation(), rew - op_cost - wait_pen - overf, False, debuf_info
+        return self.to_observation(), rew - op_cost - wait_pen - overf, self.over > 0, debuf_info
 
     def reset(self):
         for i in range(self.node):
@@ -105,6 +109,7 @@ class VehicleEnv(gym.Env):
         for i in range(self.vehicle):
             pos = self.random.randint(0, self.node)
             self.vehicles[pos] = self.vehicles[pos] + 1
+        self.over = 0
         return self.to_observation()
 
     def render(self, mode='human'):
@@ -114,7 +119,7 @@ class VehicleEnv(gym.Env):
         pass
 
     def to_observation(self):
-        arr = [0 for _ in range(self.node * self.node)]
+        arr = [0 for _ in range(self.node * self.node+1)]
         for i in range(self.node):
             arr[i] = self.vehicles[i]
         ind = self.node
@@ -124,4 +129,5 @@ class VehicleEnv(gym.Env):
                     continue
                 arr[ind] = self.queue[i][j]
                 ind = ind + 1
+        arr[ind] = self.over
         return arr

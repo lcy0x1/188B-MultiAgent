@@ -6,6 +6,6 @@
   "poisson_param": 1,
   "operation_cost": 0.1,
   "waiting_penalty": 0.2,
-  "overflow": 100,
+  "overflow": 5,
   "use_torch": false
 }

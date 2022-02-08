@@ -4,49 +4,43 @@ from datetime import datetime
 
 from ray.tune.registry import register_env
 from ray.tune.logger import pretty_print
-from ray.rllib.agents import ppo
+from ray.rllib.agents import ddpg
 
 from gym_vehicle import envs
 
 if __name__ == '__main__':
-    ppo_config = {
-        # Environment (RLlib understands openAI gym registered strings).
+    ddpg_config = {
         "env": "gym_vehicle",
-        # Use 2 environment workers (aka "rollout workers") that parallelly
-        # collect samples from their own environment clone(s).
-        "num_workers": 2,
-        # Change this to "framework: torch", if you are using PyTorch.
-        # Also, use "framework: tf2" for tf2.x eager execution.
         "framework": "tf",
-        # Tweak the default model provided automatically by RLlib,
-        # given the environment's observation- and action spaces.
-        "model": {
-            "fcnet_hiddens": [64, 64],
-            "fcnet_activation": "relu",
-        }
+        "horizon": 1000,
+        "soft_horizon": False
     }
     config_data = json.load(open(pkg_resources.resource_filename(__name__, "./config.json")))
     register_env('gym_vehicle', lambda config: envs.VehicleEnv(config_data, 0))
-    trainer = ppo.PPOTrainer(config=ppo_config)
+    trainer = ddpg.DDPGTrainer(config=ddpg_config)
     env = envs.VehicleEnv(config_data, 0)
     log_list = []
     for i in range(100):
         # Perform one iteration of training the policy with PPO
         result = None
-        result = trainer.train()
+        for _ in range(10):
+            result = trainer.train()
         print(pretty_print(result))
         checkpoint = trainer.save()
         print("checkpoint saved at", checkpoint)
 
         obs = env.reset()
         total_reward = 0
+        overf = False
         n = 1000
         print(env.action_space)
         for _ in range(n):
             action = trainer.compute_single_action(obs, explore=False, clip_action=True)
             obs, reward, done, info = env.step(action)
             total_reward += reward
-        print(total_reward / n)
+            if reward < -4:
+                overf = True
+        print(total_reward / n, overf)
 
         status = result["info"]["learner"]["default_policy"]["learner_stats"]
         status = {"policy_loss": str(status["policy_loss"]),
