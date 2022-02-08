@@ -30,23 +30,24 @@ if __name__ == '__main__':
         print("checkpoint saved at", checkpoint)
 
         obs = env.reset()
-        total_reward = 0
+        accu = 0
         overf = False
-        n = 1000
-        print(env.action_space)
-        for _ in range(n):
-            action = trainer.compute_single_action(obs, explore=False, clip_action=True)
-            obs, reward, done, info = env.step(action)
-            total_reward += reward
-            if reward < -4:
-                overf = True
-        print(total_reward / n, overf)
+        for _ in range(100):
+            total_reward = 0
+            j = 0
+            env.reset()
+            for _ in range(100):
+                j += 1
+                action = trainer.compute_single_action(obs, explore=False, clip_action=True)
+                obs, reward, done, info = env.step(action)
+                total_reward += reward
+                if done:
+                    overf = True
+                    break
+            accu += total_reward / j
+        print(accu/100, overf)
 
-        status = result["info"]["learner"]["default_policy"]["learner_stats"]
-        status = {"policy_loss": str(status["policy_loss"]),
-                  "value_function_loss": str(status["vf_loss"]),
-                  "total_loss": str(status["total_loss"])}
-        log_list.append({"step": i, "status": status, "reward": total_reward / n, "checkpoint": checkpoint,
+        log_list.append({"step": i, "reward": accu/100, "checkpoint": checkpoint,
                          "timestamp": str(datetime.fromtimestamp(result["timestamp"]))})
         out_file = open("./gym_log.json", "w")
         json.dump(log_list, out_file)

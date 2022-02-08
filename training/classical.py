@@ -22,7 +22,7 @@ def make_env(env_id, rank, seed=0):
 
 if __name__ == "__main__":
     env_id = "vehicle-v0"
-    num_cpu = 8  # Number of processes to use
+    num_cpu = 1  # Number of processes to use
     # Create the vectorized environment
     env = DummyVecEnv([make_env(env_id, i) for i in range(num_cpu)])
 
@@ -41,11 +41,18 @@ if __name__ == "__main__":
     for i in range(9):
         model.learn(total_timesteps=100_000)
         model.save(f"./data_n2_v2_set1/0.{i + 1}mil")
-        sums = 0
-        obs = env.reset()
-        for _ in range(1000):
-            action, _states = model.predict(obs)
-            obs, rewards, dones, info = env.step(action)
-            sums = sums + rewards
-        sum_list.append(sums / 1000)
+        accu = 0
+        for _ in range(100):
+            sums = 0
+            j = 0
+            obs = env.reset()
+            for _ in range(100):
+                j += 1
+                action, _states = model.predict(obs)
+                obs, rewards, dones, info = env.step(action)
+                sums = sums + rewards
+                if dones:
+                    break
+            accu += sums / j
+        sum_list.append(accu/100)
     print("average return: ", sum_list)
