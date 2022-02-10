@@ -4,7 +4,7 @@ from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.utils import set_random_seed
-import gym_vehicle
+import gym_symmetric
 
 
 def make_env(env_id, rank, seed=0):
@@ -21,8 +21,8 @@ def make_env(env_id, rank, seed=0):
 
 
 if __name__ == "__main__":
-    env_id = "vehicle-v0"
-    num_cpu = 1  # Number of processes to use
+    env_id = "symmetric-v0"
+    num_cpu = 8  # Number of processes to use
     # Create the vectorized environment
     env = DummyVecEnv([make_env(env_id, i) for i in range(num_cpu)])
 
@@ -39,21 +39,19 @@ if __name__ == "__main__":
     sum_list = []
 
     for i in range(10):
-        model.learn(total_timesteps=100_000)
-        model.save(f"./data_n2_v2_set2/0.{i + 1}mil")
+        model.learn(total_timesteps=200_000)
+        model.save(f"./data_sym_set2/0.{i + 1}mil")
         accu = 0
         for _ in range(100):
             sums = 0
             j = 0
             obs = env.reset()
-            for _ in range(100):
+            for _ in range(200):
                 j += 1
                 action, _states = model.predict(obs)
                 obs, rewards, dones, info = env.step(action)
                 sums = sums + rewards
-                if dones:
-                    break
-            accu += sums / j
+            accu += sums / j * 2
         sum_list.append(accu/100)
         print("average return: ", accu)
     print("average return: ", sum_list)

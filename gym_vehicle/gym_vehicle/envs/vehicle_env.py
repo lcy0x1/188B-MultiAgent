@@ -62,7 +62,6 @@ class VehicleEnv(gym.Env):
         self.poisson_cap = self.config["poisson_cap"]
         self.vehicles = [0 for _ in range(self.node)]
         self.queue = [[0 for _ in range(self.node)] for _ in range(self.node)]
-        self.over = 0
         self.random = None
         self.observation_space = spaces.MultiDiscrete(
             [self.vehicle + 1 for _ in range(self.node)] +
@@ -93,13 +92,12 @@ class VehicleEnv(gym.Env):
                 request = min(self.poisson_cap, self.random.poisson(self.poisson_param * (1 - price)))
                 act_req = request
                 if self.queue[i][j] + act_req > self.queue_size:
-                    act_req = 0
+                    act_req = self.queue_size - self.queue[i][j]
                 overf += (request - act_req) * self.overflow
                 self.queue[i][j] = self.queue[i][j] + act_req
                 rew += act_req * action.price[i][j]
-        self.over = max(self.over, min(overf, 1))
         debuf_info = {'loss': rew, 'operating_cost': op_cost, 'wait_penalty': wait_pen, 'overflow': overf}
-        return self.to_observation(), rew - op_cost - wait_pen - overf, self.over > 0, debuf_info
+        return self.to_observation(), rew - op_cost - wait_pen - overf, False, debuf_info
 
     def reset(self):
         for i in range(self.node):
@@ -109,7 +107,6 @@ class VehicleEnv(gym.Env):
         for i in range(self.vehicle):
             pos = self.random.randint(0, self.node)
             self.vehicles[pos] = self.vehicles[pos] + 1
-        self.over = 0
         return self.to_observation()
 
     def render(self, mode='human'):
@@ -120,8 +117,6 @@ class VehicleEnv(gym.Env):
 
     def to_observation(self):
         arr = [0 for _ in range(self.node * self.node)]
-        if self.over > 0:
-            return arr
         for i in range(self.node):
             arr[i] = self.vehicles[i]
         ind = self.node
