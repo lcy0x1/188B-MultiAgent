@@ -38,15 +38,15 @@ if __name__ == "__main__":
 
     sum_list = []
 
-    for i in range(10):
-        model.learn(total_timesteps=200_000)
-        model.save(f"./data_sym_set2/0.{i + 1}mil")
+    for i in range(100):
+        model.learn(total_timesteps=4_000_000)
+        model.save(f"./data_sym_n4v4_set1/{i + 1}")
         accu = 0
         for _ in range(100):
             sums = 0
             j = 0
             obs = env.reset()
-            for _ in range(200):
+            for _ in range(400):
                 j += 1
                 action, _states = model.predict(obs)
                 obs, rewards, dones, info = env.step(action)

@@ -22,7 +22,7 @@ def make_env(env_id, rank, seed=0):
 
 if __name__ == "__main__":
     env_id = "vehicle-v0"
-    num_cpu = 1  # Number of processes to use
+    num_cpu = 8  # Number of processes to use
     # Create the vectorized environment
     env = DummyVecEnv([make_env(env_id, i) for i in range(num_cpu)])
 
@@ -38,9 +38,9 @@ if __name__ == "__main__":
 
     sum_list = []
 
-    for i in range(10):
-        model.learn(total_timesteps=100_000)
-        model.save(f"./data_n2_v2_set2/0.{i + 1}mil")
+    for i in range(100):
+        model.learn(total_timesteps=1_000_000)
+        model.save(f"./data_cls_n4v4_set1/{i + 1}")
         accu = 0
         for _ in range(100):
             sums = 0

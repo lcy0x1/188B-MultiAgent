@@ -1,6 +1,6 @@
 {
-  "node": 2,
-  "vehicle": 2,
+  "node": 4,
+  "vehicle": 4,
   "max_queue": 3,
   "poisson_cap": 1,
   "poisson_param": 1,
