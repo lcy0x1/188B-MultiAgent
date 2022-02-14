@@ -51,8 +51,6 @@ if __name__ == "__main__":
                 action, _states = model.predict(obs)
                 obs, rewards, dones, info = env.step(action)
                 sums = sums + rewards
-                if dones:
-                    break
             accu += sums / j
         sum_list.append(accu/100)
         print("average return: ", accu)

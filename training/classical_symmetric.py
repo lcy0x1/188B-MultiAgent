@@ -39,7 +39,7 @@ if __name__ == "__main__":
     sum_list = []
 
     for i in range(100):
-        model.learn(total_timesteps=4_000_000)
+        model.learn(total_timesteps=1_000_000)
         model.save(f"./data_sym_n4v4_set1/{i + 1}")
         accu = 0
         for _ in range(100):
