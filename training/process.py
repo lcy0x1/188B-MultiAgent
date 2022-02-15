@@ -26,7 +26,7 @@ def plot(env, path, fac):
     n = 100
     m = 1000
     matrix = []
-    for i in range(100):
+    for i in range(30):
         model = PPO.load(f"./data_{path}_n4v4_set1/{i + 1}")
         model.set_env(env)
 
@@ -43,11 +43,11 @@ def plot(env, path, fac):
         print(f"DeepRL {i + 1}: average return: ", statistics.mean(list_sums), ", stdev = ",
               statistics.stdev(list_sums))
         matrix.append(list_sums)
-    with open(f'data_{path}_n4v4_stats.tsv', 'wt') as out_file:
+    with open(f'data_{path}_n4v4_set2_stats.tsv', 'wt') as out_file:
         tsv_writer = csv.writer(out_file, delimiter='\t')
         tsv_writer.writerows(matrix)
 
 
 if __name__ == "__main__":
-    plot(make_env("vehicle-v0", 12345)(), 'cls', 1)
+    # plot(make_env("vehicle-v0", 12345)(), 'cls', 1)
     plot(make_env("symmetric-v0", 12345)(), 'sym', 4)
