@@ -40,7 +40,7 @@ if __name__ == "__main__":
 
     for i in range(100):
         model.learn(total_timesteps=1_000_000)
-        model.save(f"./data_cls_n4v4_set1/{i + 1}")
+        model.save(f"./data_cls_n8v8_set1/{i + 1}")
         accu = 0
         for _ in range(100):
             sums = 0
