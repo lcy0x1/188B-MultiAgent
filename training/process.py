@@ -22,12 +22,12 @@ def make_env(env_id, rank, seed=0):
     return _init
 
 
-def plot(env, path, fac):
+def plot(env, path, fac, tr):
     n = 100
     m = 1000
     matrix = []
-    for i in range(30):
-        model = PPO.load(f"./data_{path}_n4v4_set1/{i + 1}")
+    for i in range(tr):
+        model = PPO.load(f"./data_{path}_set1/{i + 1}")
         model.set_env(env)
 
         list_sums = []
@@ -43,11 +43,11 @@ def plot(env, path, fac):
         print(f"DeepRL {i + 1}: average return: ", statistics.mean(list_sums), ", stdev = ",
               statistics.stdev(list_sums))
         matrix.append(list_sums)
-    with open(f'data_{path}_n4v4_set2_stats.tsv', 'wt') as out_file:
+    with open(f'data_{path}_n8v8_set1_stats.tsv', 'wt') as out_file:
         tsv_writer = csv.writer(out_file, delimiter='\t')
         tsv_writer.writerows(matrix)
 
 
 if __name__ == "__main__":
-    # plot(make_env("vehicle-v0", 12345)(), 'cls', 1)
-    plot(make_env("symmetric-v0", 12345)(), 'sym', 4)
+    plot(make_env("vehicle-v0", 12345)(), 'cls_n8v8', 1, 70)
+    plot(make_env("symmetric-v0", 12345)(), 'sym_n8v8', 8, 100)
