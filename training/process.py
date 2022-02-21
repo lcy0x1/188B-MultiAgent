@@ -22,12 +22,12 @@ def make_env(env_id, rank, seed=0):
     return _init
 
 
-def plot(env, path, fac, tr):
+def plot(env, path, fac, tr_begin, tr_end):
     n = 100
     m = 1000
     matrix = []
-    for i in range(tr):
-        model = PPO.load(f"./data_{path}_set1/{i + 1}")
+    for i in range(tr_end - tr_begin):
+        model = PPO.load(f"./data_{path}_set1/{i + 1 + tr_begin}")
         model.set_env(env)
 
         list_sums = []
@@ -49,5 +49,5 @@ def plot(env, path, fac, tr):
 
 
 if __name__ == "__main__":
-    plot(make_env("vehicle-v0", 12345)(), 'cls_n8v8', 1, 70)
-    plot(make_env("symmetric-v0", 12345)(), 'sym_n8v8', 8, 100)
+    plot(make_env("vehicle-v0", 12345)(), 'cls_n8v8', 1, 70, 100)
+    plot(make_env("symmetric-v0", 12345)(), 'sym_n8v8', 8, 100, 200)
