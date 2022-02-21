@@ -43,11 +43,10 @@ def plot(env, path, fac, tr_begin, tr_end):
         print(f"DeepRL {i + 1}: average return: ", statistics.mean(list_sums), ", stdev = ",
               statistics.stdev(list_sums))
         matrix.append(list_sums)
-    with open(f'data_{path}_set2_stats.tsv', 'wt') as out_file:
+    with open(f'data_{path}_170_200_stats.tsv', 'wt') as out_file:
         tsv_writer = csv.writer(out_file, delimiter='\t')
         tsv_writer.writerows(matrix)
 
 
 if __name__ == "__main__":
-    plot(make_env("vehicle-v0", 12345)(), 'cls_n8v8', 1, 70, 100)
-    plot(make_env("symmetric-v0", 12345)(), 'sym_n8v8', 8, 100, 200)
+    plot(make_env("symmetric-v0", 12345)(), 'sym_n8v8', 8, 170, 200)
