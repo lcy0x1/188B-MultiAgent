@@ -43,7 +43,7 @@ def plot(env, path, fac, tr_begin, tr_end):
         print(f"DeepRL {i + 1 + tr_begin}: average return: ", statistics.mean(list_sums), ", stdev = ",
               statistics.stdev(list_sums))
         matrix.append(list_sums)
-    with open(f'data_{path}_170_200_stats.tsv', 'wt') as out_file:
+    with open(f'data_{path}_100_140_stats.tsv', 'wt') as out_file:
         tsv_writer = csv.writer(out_file, delimiter='\t')
         tsv_writer.writerows(matrix)
 
