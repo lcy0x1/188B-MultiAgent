@@ -40,7 +40,7 @@ def plot(env, path, fac, tr_begin, tr_end):
                 sums = sums + rewards
             sums = sums / m
             list_sums.append(sums)
-        print(f"DeepRL {i + 1}: average return: ", statistics.mean(list_sums), ", stdev = ",
+        print(f"DeepRL {i + 1 + tr_begin}: average return: ", statistics.mean(list_sums), ", stdev = ",
               statistics.stdev(list_sums))
         matrix.append(list_sums)
     with open(f'data_{path}_170_200_stats.tsv', 'wt') as out_file:
