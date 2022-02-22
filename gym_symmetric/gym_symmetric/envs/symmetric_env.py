@@ -134,5 +134,5 @@ class VehicleEnv(gym.Env):
             if i > 0:
                 arr[self.node + i - 1] = self.queue[self.current_index][j]
                 arr[self.node * 2 + i - 2] = sum(self.queue[j])
-        arr[self.node * 3 - 1] = self.current_index
+        arr[self.node * 3 - 2] = self.current_index
         return arr
