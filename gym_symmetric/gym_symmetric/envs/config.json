@@ -7,5 +7,5 @@
   "operation_cost": 0.1,
   "waiting_penalty": 0.2,
   "overflow": 100,
-  "length_regulator": 0
+  "length_regulator": 0.01
 }
