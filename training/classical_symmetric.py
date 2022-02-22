@@ -21,7 +21,7 @@ def make_env(env_id, rank, seed=0):
 
 
 if __name__ == "__main__":
-    env_id = "symmetric-v0"
+    env_id = "symmetric-v1"
     num_cpu = 8  # Number of processes to use
     # Create the vectorized environment
     env = DummyVecEnv([make_env(env_id, i) for i in range(num_cpu)])
@@ -38,7 +38,7 @@ if __name__ == "__main__":
 
     sum_list = []
 
-    for i in range(100):
+    for i in range(30):
         model.learn(total_timesteps=1_000_000)
         model.save(f"./data_sym_n4v4_rot_set1/{i + 1}")
         accu = 0
