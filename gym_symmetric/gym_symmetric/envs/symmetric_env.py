@@ -58,6 +58,7 @@ class VehicleEnv(gym.Env):
         self.queue_size = self.config["max_queue"]
         self.overflow = self.config["overflow"]
         self.poisson_cap = self.config["poisson_cap"]
+        self.length_regulator = self.config["length_regulator"]
         self.vehicles = [0 for _ in range(self.node)]
         self.queue = [[0 for _ in range(self.node)] for _ in range(self.node)]
         self.current_index = 0
@@ -66,8 +67,8 @@ class VehicleEnv(gym.Env):
         self.random = None
         self.observation_space = spaces.MultiDiscrete(
             [self.vehicle + 1 for _ in range(self.node)] +  # vehicles
-            [self.queue_size + 1 for _ in range(self.node)] +  # queue
-            [self.queue_size * (self.node - 1) + 1 for _ in range(self.node)] +  # queue at other nodes
+            [self.queue_size + 1 for _ in range(self.node - 1)] +  # queue
+            [self.queue_size * (self.node - 1) + 1 for _ in range(self.node - 1)] +  # queue at other nodes
             [self.node])  # state
         self.action_space = spaces.Box(0, 1, (self.node * 2,))
         self.seed(seed)
@@ -79,6 +80,7 @@ class VehicleEnv(gym.Env):
         action = VehicleAction(self, self.current_index, act)
         self.action_cache[self.current_index] = action
         self.current_index += 1
+        len_pen = abs(sum(act[0:self.node]) - 1) * self.length_regulator
         if self.current_index == self.node:
             self.current_index = 0
             op_cost = 0
@@ -104,8 +106,8 @@ class VehicleEnv(gym.Env):
                     self.queue[i][j] = self.queue[i][j] + act_req
                     rew += act_req * self.action_cache[i].price[j]
             debuf_info = {'loss': rew, 'operating_cost': op_cost, 'wait_penalty': wait_pen, 'overflow': overf}
-            return self.to_observation(), rew - op_cost - wait_pen - overf, False, debuf_info
-        return self.to_observation(), 0, False, {}
+            return self.to_observation(), rew - op_cost - wait_pen - overf - len_pen, False, debuf_info
+        return self.to_observation(), -len_pen, False, {}
 
     def reset(self):
         for i in range(self.node):
@@ -125,10 +127,12 @@ class VehicleEnv(gym.Env):
         pass
 
     def to_observation(self):
-        arr = [0 for _ in range(self.node * 3 + 1)]
+        arr = [0 for _ in range(self.node * 3 - 1)]
         for i in range(self.node):
-            arr[i] = self.vehicles[i]
-            arr[self.node + i] = self.queue[self.current_index][i]
-            arr[self.node * 2 + i] = sum(self.queue[i])
-        arr[self.node * 3] = self.current_index
+            j = (self.current_index + i) % self.node
+            arr[i] = self.vehicles[j]
+            if i > 0:
+                arr[self.node + i - 1] = self.queue[self.current_index][j]
+                arr[self.node * 2 + i - 2] = sum(self.queue[j])
+        arr[self.node * 3 - 1] = self.current_index
         return arr
