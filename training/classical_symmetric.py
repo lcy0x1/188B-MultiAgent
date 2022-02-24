@@ -38,20 +38,20 @@ if __name__ == "__main__":
 
     sum_list = []
 
-    for i in range(30):
+    for i in range(200):
         model.learn(total_timesteps=1_000_000)
-        model.save(f"./data_sym_n4v4_rot_set1/{i + 1}")
+        model.save(f"./data_sym_n8v8_reg_set1/{i + 1}")
         accu = 0
         for _ in range(100):
             sums = 0
             j = 0
             obs = env.reset()
-            for _ in range(400):
+            for _ in range(800):
                 j += 1
                 action, _states = model.predict(obs)
                 obs, rewards, dones, info = env.step(action)
                 sums = sums + rewards
-            accu += sums / j * 4
+            accu += sums / j * 8
         sum_list.append(accu/100)
         print("average return: ", accu)
     print("average return: ", sum_list)
