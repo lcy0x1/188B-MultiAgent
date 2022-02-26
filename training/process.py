@@ -49,4 +49,4 @@ def plot(env, path, fac, tr_begin, tr_end):
 
 
 if __name__ == "__main__":
-    plot(make_env("symmetric-v1", 12345)(), 'sym_n4v4_rot', 4, 0, 30)
+    plot(make_env("symmetric-v1", 12345)(), 'sym_n8v8_reg', 8, 0, 80)
