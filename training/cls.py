@@ -52,7 +52,7 @@ if __name__ == "__main__":
     # model.set_env(env)
 
     for i in range(mil_steps):
-        model.learn(total_timesteps=1_0_000)
+        model.learn(total_timesteps=1_000_000)
         model.save(f"./data/n8v16/{network_type}/{id}/{i + 1}")
         accu = 0
 
