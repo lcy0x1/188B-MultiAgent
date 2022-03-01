@@ -18,6 +18,10 @@ pip install gym
 ```
 pip3 install torch==1.10.2+cu113 torchvision==0.11.3+cu113 torchaudio==0.10.2+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
 pip install stable-baselines3
+git clone https://github.com/lcy0x1/188B-MultiAgent.git
+cd 188B-MultiAgent
+pip install -e gym_vehicle
+pip install -e gym_symmetric
 ```
 
 python3 training/cls.py vehicle-v0 128 2 100 100 100 1
