@@ -22,6 +22,7 @@ git clone https://github.com/lcy0x1/188B-MultiAgent.git
 cd 188B-MultiAgent
 pip install -e gym_vehicle
 pip install -e gym_symmetric
+git pull
 ```
 
 python3 training/cls.py vehicle-v0 128 2 100 100 100 1
@@ -30,5 +31,5 @@ python3 training/cls.py vehicle-v0 256 3 100 100 100 1
 python3 training/cls.py vehicle-v0 256 4 100 100 100 1
 python3 training/cls.py symmetric-v0 128 2 100 100 100 8
 python3 training/cls.py symmetric-v0 128 3 100 100 100 8
-python3 training/cls.py symmetric-v0 128 3 100 100 100 8
-python3 training/cls.py symmetric-v0 128 4 100 100 100 8
+python3 training/cls.py symmetric-v0 256 3 100 100 100 8
+python3 training/cls.py symmetric-v0 256 4 100 100 100 8
