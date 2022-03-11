@@ -12,6 +12,7 @@ from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.utils import set_random_seed
 import gym_vehicle
 import gym_symmetric
+from torch import nn
 
 
 def make_env(env_id, rank, seed=0):
@@ -45,7 +46,10 @@ if __name__ == "__main__":
     # You can choose between `DummyVecEnv` (usually faster) and `SubprocVecEnv`
     # env = make_vec_env(env_id, n_envs=num_cpu, seed=0, vec_env_cls=SubprocVecEnv)
     layers = [layer_n for _ in range(layer_l)]
-    policy_kwargs = {"net_arch": [{"vi": layers, "vf": layers}]}
+    policy_kwargs = {
+        "net_arch": [{"vi": layers, "vf": layers}],
+        "activation_fn": nn.ReLU
+    }
     network_type = '-'.join(list(map(str, layers)))
     model = PPO('MlpPolicy', env, policy_kwargs=policy_kwargs, verbose=0)
 
@@ -54,7 +58,7 @@ if __name__ == "__main__":
 
     for i in range(mil_steps):
         model.learn(total_timesteps=1_000_000)
-        model.save(f"./data/n8v16/{network_type}/{id}/{i + 1}")
+        model.save(f"./data/n8v16/{network_type}_relu/{id}/{i + 1}")
         accu = 0
 
         list_sums = []
@@ -68,7 +72,7 @@ if __name__ == "__main__":
                 obs, rewards, dones, info = env.step(action)
                 sums = sums + rewards
             list_sums.extend((sums / eval_m).tolist())
-        with open(f"./data/n8v16/{network_type}/{id}.tsv", 'a') as out_file:
+        with open(f"./data/n8v16/{network_type}_relu/{id}.tsv", 'a') as out_file:
             tsv_writer = csv.writer(out_file, delimiter='\t')
             tsv_writer.writerow(list_sums)
         print(f"{network_type}/{id}/{i + 1}: average return: ", statistics.mean(list_sums), ", stdev = ",

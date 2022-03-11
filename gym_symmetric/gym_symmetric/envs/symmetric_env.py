@@ -7,6 +7,8 @@ from gym import spaces
 from gym.utils import seeding
 import json
 
+from numpy.random.mtrand import RandomState
+
 
 class VehicleAction:
 
@@ -63,7 +65,7 @@ class VehicleEnv(gym.Env):
         self.current_index = 0
         self.action_cache: List[Optional[VehicleAction]] = [None for _ in range(self.node)]
         self.over = 0
-        self.random = None
+        self.random: Optional[RandomState] = None
         self.observation_space = spaces.MultiDiscrete(
             [self.vehicle + 1 for _ in range(self.node)] +  # vehicles
             [self.queue_size + 1 for _ in range(self.node)] +  # queue
