@@ -58,7 +58,7 @@ if __name__ == "__main__":
 
     for i in range(mil_steps):
         model.learn(total_timesteps=1_000_000)
-        model.save(f"./data/n8v16/{network_type}_relu/{id}/{i + 1}")
+        model.save(f"./data/n4v8-nonsym/{network_type}_relu/{id}/{i + 1}")
         accu = 0
 
         list_sums = []
