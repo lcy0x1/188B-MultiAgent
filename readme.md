@@ -33,3 +33,6 @@ python3 training/cls.py symmetric-v0 128 2 100 100 100 8
 python3 training/cls.py symmetric-v0 128 3 100 100 100 8
 python3 training/cls.py symmetric-v0 256 3 100 100 100 8
 python3 training/cls.py symmetric-v0 256 4 100 100 100 8
+
+python3 training/cls.py vehicle-v0 128 2 50 100 100 1
+python3 training/cls.py symmetric-v0 128 2 50 100 100 4
