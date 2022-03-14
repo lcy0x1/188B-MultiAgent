@@ -68,6 +68,7 @@ class VehicleEnv(gym.Env):
             [self.queue_size + 1 for _ in range(self.node * (self.node - 1))])
         self.action_space = spaces.Box(0, 1, (self.node * self.node + self.node * (self.node - 1),))
         self.seed(seed)
+        self.steps = 0
 
     def seed(self, seed=None):
         self.random, _ = seeding.np_random(seed)
@@ -78,6 +79,7 @@ class VehicleEnv(gym.Env):
         wait_pen = 0
         overf = 0
         rew = 0
+        self.steps += 1
         for i in range(self.node):
             for j in range(self.node):
                 if i == j:
@@ -97,7 +99,7 @@ class VehicleEnv(gym.Env):
                 self.queue[i][j] = self.queue[i][j] + act_req
                 rew += act_req * action.price[i][j]
         debuf_info = {'loss': rew, 'operating_cost': op_cost, 'wait_penalty': wait_pen, 'overflow': overf}
-        return self.to_observation(), rew - op_cost - wait_pen - overf, False, debuf_info
+        return self.to_observation(), rew - op_cost - wait_pen - overf, self.steps == 128, debuf_info
 
     def reset(self):
         for i in range(self.node):
@@ -107,6 +109,7 @@ class VehicleEnv(gym.Env):
         for i in range(self.vehicle):
             pos = self.random.randint(0, self.node)
             self.vehicles[pos] = self.vehicles[pos] + 1
+        self.steps = 0
         return self.to_observation()
 
     def render(self, mode='human'):

@@ -14,20 +14,6 @@ import gym_vehicle
 import gym_symmetric
 from torch import nn
 
-
-def make_env(env_id, rank, seed=0):
-    def _init():
-        env = gym.make(env_id)
-        env.seed(seed + rank)
-        print("initial state: ", env.reset())
-        print("Action Space: ", env.observation_space)
-        print("Observation Space: ", env.action_space)
-        return env
-
-    set_random_seed(seed)
-    return _init
-
-
 if __name__ == "__main__":
     id = sys.argv[1]
     layer_n = int(sys.argv[2])
@@ -37,9 +23,9 @@ if __name__ == "__main__":
     eval_m = int(sys.argv[6])
     eval_k = int(sys.argv[7])
 
-    num_cpu = 8  # Number of processes to use
+    n_env = 64  # Number of processes to use
     # Create the vectorized environment
-    env = DummyVecEnv([make_env(id, i) for i in range(num_cpu)])
+    env = make_vec_env(id, n_env)
 
     # Stable Baselines provides you with make_vec_env() helper
     # which does exactly the previous steps for you.
@@ -51,13 +37,14 @@ if __name__ == "__main__":
         "activation_fn": nn.ReLU
     }
     network_type = '-'.join(list(map(str, layers)))
-    model = PPO('MlpPolicy', env, policy_kwargs=policy_kwargs, verbose=0)
+    model = PPO('MlpPolicy', env, policy_kwargs=policy_kwargs, n_steps=128, verbose=0)
 
     # model = PPO.load("./data/1mil")
     # model.set_env(env)
 
     for i in range(mil_steps):
-        model.learn(total_timesteps=1_000_000)
+        for _ in range(122):
+            model.learn(total_timesteps=128 * 64)
         model.save(f"./data/n8v16/{network_type}_relu/{id}/{i + 1}")
         accu = 0
 
