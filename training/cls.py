@@ -60,7 +60,7 @@ if __name__ == "__main__":
 
     for i in range(mil_steps):
         model.learn(total_timesteps=1_000_000)
-        model.save(f"./data/n4v8-nonsym/{network_type}_relu/{nid}/{i + 1}")
+        model.save(f"./data/n16v64-nonsym/{network_type}_relu/{nid}/{i + 1}")
         accu = 0
 
         list_sums = []
