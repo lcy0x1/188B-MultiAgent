@@ -116,11 +116,11 @@ class VehicleEnv(gym.Env):
         tmp = 0
         for i in range(self.node):
             for j in range(self.node):
-                if i == j:
-                    continue
                 self.edge_matrix[i][j] = self.edge_list[tmp]
                 self.bounds[j] = max(self.bounds[j], self.edge_matrix[i][j])
                 tmp += 1
+                if i == j:
+                    continue
                 if self.edge_matrix[i][j] < 1:
                     print("Error! Edge length too short (minimum length 1).")
                     sys.exit()
@@ -178,11 +178,13 @@ class VehicleEnv(gym.Env):
                 op_cost += veh_motion * self.operating_cost
                 wait_pen += self.queue[i][j] * self.waiting_penalty
                 price = action.price[i][j]
-                request = min(self.poisson_cap, self.random.poisson(self.poisson_param * (1 - price)))
+                edge_len = self.edge_matrix[i][j]
+                freq = self.poisson_param * (1 - price)
+                request = min(self.poisson_cap, self.random.poisson(freq))
                 act_req = min(request, self.queue_size - self.queue[i][j])
                 overf += (request - act_req) * self.overflow
                 self.queue[i][j] = self.queue[i][j] + act_req
-                rew += act_req * price * self.edge_matrix[i][j]
+                rew += act_req * price * edge_len
         debuf_info = {'reward': rew, 'operating_cost': op_cost, 'wait_penalty': wait_pen, 'overflow': overf}
         return self.to_observation(), rew - op_cost - wait_pen - overf, False, debuf_info
 
