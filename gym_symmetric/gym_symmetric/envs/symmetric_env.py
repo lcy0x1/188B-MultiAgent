@@ -81,7 +81,7 @@ class VehicleEnv(gym.Env):
             [self.vehicle + 1 for _ in range(sum(self.bounds))] +  # vehicles
             [self.queue_size + 1 for _ in range(self.node)] +  # queue
             [self.queue_size * (self.node - 1) + 1 for _ in range(self.node)] +  # queue at other nodes
-            [self.max_edge + 1 for _ in range(self.node)] +
+            [self.queue_size * (self.node - 1) + 1 for _ in range(self.node)] +  # queue from other nodes
             [self.node])  # state
         self.action_space = spaces.Box(0, 1, (self.node * 2,))
 
@@ -216,7 +216,7 @@ class VehicleEnv(gym.Env):
             arr[ind] = sum(self.queue[i])
             ind += 1
         for i in range(self.node):
-            arr[ind] = self.edge_matrix[self.current_index][i]
+            arr[ind] = sum(self.queue[:][i])
             ind += 1
         arr[ind] = self.current_index
         return arr

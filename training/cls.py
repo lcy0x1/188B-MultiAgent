@@ -56,7 +56,7 @@ if __name__ == "__main__":
     # model = PPO.load("./data/1mil")
     # model.set_env(env)
 
-    nid = "edge_" + id
+    nid = "receive_" + id
 
     for i in range(mil_steps):
         model.learn(total_timesteps=1_000_000)
