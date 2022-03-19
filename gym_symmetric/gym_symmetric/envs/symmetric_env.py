@@ -94,7 +94,7 @@ class VehicleEnv(gym.Env):
 
     def fill_edge_matrix(self):
         edge_num = len(self.edge_list)
-        if (self.node * (self.node - 1)) != edge_num:
+        if (self.node * self.node) != edge_num:
             print("Incorrect edge_lengths parameter. Total nodes and edges do not match!")
             sys.exit()
         # Creating 2D matrix for easier access
