@@ -71,6 +71,7 @@ class VehicleEnv(gym.Env):
         self.edge_matrix = [[0 for _ in range(self.node)] for _ in range(self.node)]
         self.bounds = [0 for _ in range(self.node)]
         self.fill_edge_matrix()
+        self.max_edge = max(self.bounds)
 
         self.current_index = 0
         self.action_cache: List[Optional[VehicleAction]] = [None for _ in range(self.node)]
@@ -80,6 +81,7 @@ class VehicleEnv(gym.Env):
             [self.vehicle + 1 for _ in range(sum(self.bounds))] +  # vehicles
             [self.queue_size + 1 for _ in range(self.node)] +  # queue
             [self.queue_size * (self.node - 1) + 1 for _ in range(self.node)] +  # queue at other nodes
+            [self.max_edge + 1 for _ in range(self.node)] +
             [self.node])  # state
         self.action_space = spaces.Box(0, 1, (self.node * 2,))
 
@@ -194,7 +196,7 @@ class VehicleEnv(gym.Env):
         pass
 
     def to_observation(self):
-        arr = [0 for _ in range(self.node * 2 + sum(self.bounds) + 1)]
+        arr = [0 for _ in range(self.node * 3 + sum(self.bounds) + 1)]
         ind = 0
         for i in range(self.node):
             arr[ind] = self.vehicles[i]
@@ -212,6 +214,9 @@ class VehicleEnv(gym.Env):
             ind += 1
         for i in range(self.node):
             arr[ind] = sum(self.queue[i])
+            ind += 1
+        for i in range(self.node):
+            arr[ind] = self.edge_matrix[self.current_index][i]
             ind += 1
         arr[ind] = self.current_index
         return arr
