@@ -51,7 +51,9 @@ if __name__ == "__main__":
         "activation_fn": nn.ReLU
     }
     network_type = '-'.join(list(map(str, layers)))
-    model = PPO('MlpPolicy', env, policy_kwargs=policy_kwargs, verbose=0)
+    model = PPO('MlpPolicy', env, policy_kwargs=policy_kwargs, verbose=0,
+                gamma=0.99 ** (1 / eval_k), gae_lambda=0.95 ** (1 / eval_k),
+                n_steps=256 * eval_k)
 
     # model = PPO.load("./data/1mil")
     # model.set_env(env)
