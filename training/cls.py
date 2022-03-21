@@ -72,7 +72,7 @@ if __name__ == "__main__":
                 obs, rewards, dones, info = env.step(action)
                 sums = sums + rewards
             list_sums.extend((sums / eval_m).tolist())
-        with open(f"./data/n4v8-nonsym/{network_type}_relu/{id}.tsv", 'a') as out_file:
+        with open(f"./data/n16v64-nonsym/{network_type}_relu/{id}.tsv", 'a') as out_file:
             tsv_writer = csv.writer(out_file, delimiter='\t')
             tsv_writer.writerow(list_sums)
         print(f"{network_type}/{id}/{i + 1}: average return: ", statistics.mean(list_sums), ", stdev = ",
