@@ -60,7 +60,7 @@ if __name__ == "__main__":
     # model.set_env(env)
 
     nid = "edge_" + id
-    dire = f"./data/n16v640-nonsym/{network_type}_relu/"
+    dire = f"./data/n16v640-nonsym/{network_type}-lr{lrate}/"
 
     for i in range(mil_steps):
         model.learn(total_timesteps=1_000_000)
