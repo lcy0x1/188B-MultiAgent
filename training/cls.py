@@ -36,6 +36,7 @@ if __name__ == "__main__":
     eval_n = int(sys.argv[5])
     eval_m = int(sys.argv[6])
     eval_k = int(sys.argv[7])
+    lrate = int(sys.argv[8])
 
     num_cpu = 8  # Number of processes to use
     # Create the vectorized environment
@@ -53,16 +54,17 @@ if __name__ == "__main__":
     network_type = '-'.join(list(map(str, layers)))
     model = PPO('MlpPolicy', env, policy_kwargs=policy_kwargs, verbose=0,
                 gamma=0.99 ** (1 / eval_k), gae_lambda=0.95 ** (1 / eval_k),
-                n_steps=256 * eval_k)
+                n_steps=256 * eval_k, learning_rate=lrate * 0.0003)
 
     # model = PPO.load("./data/1mil")
     # model.set_env(env)
 
     nid = "edge_" + id
+    dire = f"./data/n16v640-nonsym/{network_type}_relu/"
 
     for i in range(mil_steps):
         model.learn(total_timesteps=1_000_000)
-        model.save(f"./data/n16v64-nonsym/{network_type}_relu/{nid}/{i + 1}")
+        model.save(dire + f"{nid}/{i + 1}")
         accu = 0
 
         list_sums = []
@@ -76,7 +78,7 @@ if __name__ == "__main__":
                 obs, rewards, dones, info = env.step(action)
                 sums = sums + rewards
             list_sums.extend((sums / eval_m).tolist())
-        with open(f"./data/n16v64-nonsym/{network_type}_relu/{nid}.tsv", 'a') as out_file:
+        with open(dire + f"{nid}.tsv", 'a') as out_file:
             tsv_writer = csv.writer(out_file, delimiter='\t')
             tsv_writer.writerow(list_sums)
         print(f"{network_type}/{nid}/{i + 1}: average return: ", statistics.mean(list_sums), ", stdev = ",
