@@ -77,7 +77,8 @@ class VehicleEnv(gym.Env):
         self.over = 0
         self.random: Optional[RandomState] = None
         self.observation_space = spaces.MultiDiscrete(
-            [self.vehicle + 1 for _ in range(sum(self.bounds))] +  # vehicles
+            [self.vehicle + 1 for _ in range(self.node)] +  # vehicles
+            [self.vehicle * self.bounds[i] + 1 for i in range(self.node)] +  # vehicles
             [self.queue_size + 1 for _ in range(self.node)] +  # queue
             [self.queue_size * (self.node - 1) + 1 for _ in range(self.node)] +  # queue at other nodes
             [self.node])  # state
@@ -196,19 +197,18 @@ class VehicleEnv(gym.Env):
         pass
 
     def to_observation(self):
-        arr = [0 for _ in range(self.node * 2 + sum(self.bounds) + 1)]
+        arr = [0 for _ in range(self.node * 4 + 1)]
         ind = 0
         for i in range(self.node):
             arr[ind] = self.vehicles[i]
             ind += 1
         for j in range(self.node):
-            sums = [0 for _ in range(self.bounds[j] - 1)]
+            sums = 0
             for i in range(self.node):
                 for k in range(self.edge_matrix[i][j] - 1):
-                    sums[k] += self.mini_vehicles[i][j][k]
-            for k in range(self.bounds[j] - 1):
-                arr[ind] += sums[k]
-                ind += 1
+                    sums += self.mini_vehicles[i][j][k]
+            arr[ind] = sums
+            ind += 1
         for i in range(self.node):
             arr[ind] = self.queue[self.current_index][i]
             ind += 1
