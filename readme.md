@@ -48,6 +48,13 @@ python3 training/cls.py symmetric-v0 256 2 30 100 100 16 30
 python3 training/cls.py symmetric-v0 128 2 30 100 100 16 300
 python3 training/cls.py symmetric-v0 128 3 30 100 100 16 300
 python3 training/cls.py symmetric-v0 256 2 30 100 100 16 300
+
+
+python3 training/cls.py symmetric-v0 128 3 30 100 100 16 30 "-lr3/edge_symmetric-v0/30.zip" speedup
+python3 training/cls.py symmetric-v0 128 3 30 100 100 16 30 "-lr30/edge_symmetric-v0/30.zip" continue
+
+
+
 ```
 
 reward normalization

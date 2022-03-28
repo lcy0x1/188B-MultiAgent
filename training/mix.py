@@ -38,8 +38,7 @@ if __name__ == "__main__":
     eval_k = int(sys.argv[7])
     lrate = int(sys.argv[8])
     load = sys.argv[9]
-    baselr = int(sys.argv[10])
-    name = sys.argv[11]
+    name = sys.argv[10]
 
     num_cpu = 8  # Number of processes to use
     # Create the vectorized environment
@@ -57,9 +56,9 @@ if __name__ == "__main__":
     network_type = '-'.join(list(map(str, layers)))
 
     nid = "mix_" + name
-    dire = f"./data/n16v640-nonsym/{network_type}-lr{baselr}/"
+    dire = f"./data/n16v640-nonsym/{network_type}-lr{lrate}/"
 
-    model = PPO.load(dire + load)
+    model = PPO.load(f"./data/n16v640-nonsym/{network_type}" + load)
     model.learning_rate = lrate * 0.0003
     model.set_env(env)
 
