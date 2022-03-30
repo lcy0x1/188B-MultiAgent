@@ -59,6 +59,7 @@ if __name__ == "__main__":
     dire = f"./data/n16v640-nonsym/{network_type}-lr{lrate}/"
 
     model = PPO.load(f"./data/n16v640-nonsym/{network_type}" + load)
+    print("Load from: " + f"./data/n16v640-nonsym/{network_type}" + load)
     model.learning_rate = lrate * 0.0003
     model.set_env(env)
 
