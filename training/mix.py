@@ -37,6 +37,8 @@ if __name__ == "__main__":
     eval_m = int(sys.argv[6])
     eval_k = int(sys.argv[7])
     lrate = int(sys.argv[8])
+    load = sys.argv[9]
+    name = sys.argv[10]
 
     num_cpu = 8  # Number of processes to use
     # Create the vectorized environment
@@ -52,15 +54,14 @@ if __name__ == "__main__":
         "activation_fn": nn.ReLU
     }
     network_type = '-'.join(list(map(str, layers)))
-    model = PPO('MlpPolicy', env, policy_kwargs=policy_kwargs, verbose=0,
-                gamma=0.99 ** (1 / eval_k), gae_lambda=0.95 ** (1 / eval_k),
-                n_steps=256 * eval_k, learning_rate=lrate * 0.0003)
 
-    # model = PPO.load("./data/1mil")
-    # model.set_env(env)
+    nid = "mix_" + name
+    dire = f"./data/n16v640-nonsym/{network_type}-lr{lrate}/"
 
-    nid = "avg_" + id
-    dire = f"./data/n16v200-nonsym/{network_type}-lr{lrate}/"
+    model = PPO.load(f"./data/n16v640-nonsym/{network_type}" + load)
+    print("Load from: " + f"./data/n16v640-nonsym/{network_type}" + load)
+    model.learning_rate = lrate * 0.0003
+    model.set_env(env)
 
     for i in range(mil_steps):
         model.learn(total_timesteps=1_000_000)

@@ -46,6 +46,33 @@ class VehicleAction:
             ind = ind + 1
 
 
+class AverageQueue:
+
+    def __init__(self, cap):
+        self.list = [0 for _ in range(cap)]
+        self.cap = cap
+        self.count = 0
+        self.index = 0
+        self.sum = 0
+
+    def add(self, val):
+        self.sum = self.sum - self.list[self.index] + val
+        self.list[self.index] = val
+        self.count = max(self.cap, self.count + 1)
+        self.index = (self.index + 1) % self.cap
+
+    def average(self):
+        if self.count == 0:
+            return 0
+        return self.sum / self.count
+
+    def reset(self):
+        self.list = [0 for _ in range(self.cap)]
+        self.count = 0
+        self.index = 0
+        self.sum = 0
+
+
 class VehicleEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
@@ -61,6 +88,12 @@ class VehicleEnv(gym.Env):
         self.queue_size = self.config["max_queue"]
         self.overflow = self.config["overflow"]
         self.poisson_cap = self.config["poisson_cap"]
+        self.use_average_reward = self.config["average_reward"]
+        self.average_queue_length = self.config["average_queue"]
+        self.average_queue_reset = self.config["average_reset"]
+        self.include_edge = self.config["include_edge"]
+        self.mini_node_layer = self.config["mini_node_layer"]
+
         self.vehicles = [0 for _ in range(self.node)]
         self.queue = [[0 for _ in range(self.node)] for _ in range(self.node)]
 
@@ -71,6 +104,7 @@ class VehicleEnv(gym.Env):
         self.edge_matrix = [[0 for _ in range(self.node)] for _ in range(self.node)]
         self.bounds = [0 for _ in range(self.node)]
         self.fill_edge_matrix()
+        self.max_edge = max(self.bounds)
 
         self.current_index = 0
         self.action_cache: List[Optional[VehicleAction]] = [None for _ in range(self.node)]
@@ -81,6 +115,7 @@ class VehicleEnv(gym.Env):
             [self.vehicle * self.bounds[i] + 1 for i in range(self.node)] +  # vehicles
             [self.queue_size + 1 for _ in range(self.node)] +  # queue
             [self.queue_size * (self.node - 1) + 1 for _ in range(self.node)] +  # queue at other nodes
+            ([self.max_edge + 1 for _ in range(self.node)] if self.include_edge else []) +
             [self.node])  # state
         self.action_space = spaces.Box(0, 1, (self.node * 2,))
 
@@ -88,6 +123,9 @@ class VehicleEnv(gym.Env):
         self.mini_vehicles = [[[0 for _ in range(self.edge_matrix[i][j] - 1)]
                                for j in range(self.node)] for i in range(self.node)]
 
+        self.mini_node_processor = lambda sums, i, j: sums[i]
+
+        self.average_reward = AverageQueue(self.average_queue_length)
         self.seed(seed)
 
     def seed(self, seed=None):
@@ -159,22 +197,31 @@ class VehicleEnv(gym.Env):
                     self.vehicles[i] -= veh_motion
                     self.queue[i][j] = max(0, self.queue[i][j] - veh_motion)
                     op_cost += veh_motion * self.operating_cost
-                    wait_pen += self.queue[i][j] * self.waiting_penalty
                     price = self.action_cache[i].price[j]
                     edge_len = self.edge_matrix[i][j]
-                    freq = self.poisson_param * (1 - price)
+                    wait_pen += self.queue[i][j] * self.waiting_penalty * edge_len
+                    freq = self.poisson_param * (1 - price) / edge_len
                     request = min(self.poisson_cap, self.random.poisson(freq))
                     act_req = request
                     if self.queue[i][j] + act_req > self.queue_size:
                         act_req = 0
-                    overf += (request - act_req) * self.overflow
+                    overf += (request - act_req) * self.overflow * edge_len
                     self.queue[i][j] = self.queue[i][j] + act_req
                     rew += act_req * price * edge_len
-            debuf_info = {'loss': rew, 'operating_cost': op_cost, 'wait_penalty': wait_pen, 'overflow': overf}
-            return self.to_observation(), rew - op_cost - wait_pen - overf, False, debuf_info
+
+            reward = rew - op_cost - wait_pen - overf
+            current_reward = reward
+            if self.use_average_reward:
+                current_reward -= self.average_reward.average()
+            self.average_reward.add(reward)
+            debuf_info = {'loss': rew, 'operating_cost': op_cost, 'wait_penalty': wait_pen, 'overflow': overf,
+                          'reward': reward}
+            return self.to_observation(), current_reward, False, debuf_info
         return self.to_observation(), 0, False, {}
 
     def reset(self):
+        if self.average_queue_reset:
+            self.average_reward.reset()
         # Reset queue, vehicles at nodes AND in travel
         for i in range(self.node):
             self.vehicles[i] = 0
@@ -197,23 +244,28 @@ class VehicleEnv(gym.Env):
         pass
 
     def to_observation(self):
-        arr = [0 for _ in range(self.node * 4 + 1)]
+        arr = [0 for _ in range(self.node * (3 + (1 if self.include_edge else 0) + self.mini_node_layer) + 1)]
         ind = 0
         for i in range(self.node):
             arr[ind] = self.vehicles[i]
             ind += 1
         for j in range(self.node):
-            sums = 0
+            sums = [0 for _ in range(self.bounds[j] - 1)]
             for i in range(self.node):
                 for k in range(self.edge_matrix[i][j] - 1):
-                    sums += self.mini_vehicles[i][j][k]
-            arr[ind] = sums
-            ind += 1
+                    sums[k] += self.mini_vehicles[i][j][k]
+            for i in range(self.mini_node_layer):
+                arr[ind] = self.mini_node_processor(sums, i, j)
+                ind += 1
         for i in range(self.node):
             arr[ind] = self.queue[self.current_index][i]
             ind += 1
         for i in range(self.node):
             arr[ind] = sum(self.queue[i])
             ind += 1
+        if self.include_edge:
+            for i in range(self.node):
+                arr[ind] = self.edge_matrix[self.current_index][i]
+                ind += 1
         arr[ind] = self.current_index
         return arr

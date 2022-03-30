@@ -1,12 +1,19 @@
 {
   "node": 16,
-  "vehicle": 64,
-  "max_queue": 100,
+  "vehicle": 200,
+  "max_queue": 10,
   "poisson_param": 1,
-  "operation_cost": 0.1,
+  "operation_cost": 0,
   "waiting_penalty": 0.2,
-  "overflow": 10,
+  "overflow": 1,
   "poisson_cap": 3,
+
+  "average_reward": true,
+  "average_queue": 30,
+  "average_reset": false,
+  "include_edge": true,
+  "mini_node_layer": 1,
+
   "edge_lengths": [
     0,1,2,3,1,2,3,4,2,3,4,5,3,4,5,6,
     1,0,1,2,2,1,2,3,3,2,3,4,4,3,4,5,
