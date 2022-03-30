@@ -46,6 +46,33 @@ class VehicleAction:
             ind = ind + 1
 
 
+class AverageQueue:
+
+    def __init__(self, cap):
+        self.list = [0 for _ in range(cap)]
+        self.cap = cap
+        self.count = 0
+        self.index = 0
+        self.sum = 0
+
+    def add(self, val):
+        self.sum = self.sum - self.list[self.index] + val
+        self.list[self.index] = val
+        self.count = max(self.cap, self.count + 1)
+        self.index = (self.index + 1) % self.cap
+
+    def average(self):
+        if self.count == 0:
+            return 0
+        return self.sum / self.count
+
+    def reset(self):
+        self.list = [0 for _ in range(self.cap)]
+        self.count = 0
+        self.index = 0
+        self.sum = 0
+
+
 class VehicleEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
@@ -88,7 +115,7 @@ class VehicleEnv(gym.Env):
         # Stores number of vehicles at mini node between i and j
         self.mini_vehicles = [[[0 for _ in range(self.edge_matrix[i][j] - 1)]
                                for j in range(self.node)] for i in range(self.node)]
-
+        self.average_reward = AverageQueue(30)
         self.seed(seed)
 
     def seed(self, seed=None):
@@ -160,22 +187,29 @@ class VehicleEnv(gym.Env):
                     self.vehicles[i] -= veh_motion
                     self.queue[i][j] = max(0, self.queue[i][j] - veh_motion)
                     op_cost += veh_motion * self.operating_cost
-                    wait_pen += self.queue[i][j] * self.waiting_penalty
                     price = self.action_cache[i].price[j]
                     edge_len = self.edge_matrix[i][j]
-                    freq = self.poisson_param * (1 - price)
+                    wait_pen += self.queue[i][j] * self.waiting_penalty * edge_len
+                    freq = self.poisson_param * (1 - price) / edge_len
                     request = min(self.poisson_cap, self.random.poisson(freq))
                     act_req = request
                     if self.queue[i][j] + act_req > self.queue_size:
                         act_req = 0
-                    overf += (request - act_req) * self.overflow
+                    overf += (request - act_req) * self.overflow * edge_len
                     self.queue[i][j] = self.queue[i][j] + act_req
                     rew += act_req * price * edge_len
-            debuf_info = {'loss': rew, 'operating_cost': op_cost, 'wait_penalty': wait_pen, 'overflow': overf}
-            return self.to_observation(), rew - op_cost - wait_pen - overf, False, debuf_info
+
+            reward = rew - op_cost - wait_pen - overf
+            current_reward = reward - self.average_reward.average()
+            self.average_reward.add(reward)
+            debuf_info = {'loss': rew, 'operating_cost': op_cost, 'wait_penalty': wait_pen, 'overflow': overf,
+                          'reward': reward}
+            return self.to_observation(), current_reward, False, debuf_info
         return self.to_observation(), 0, False, {}
 
     def reset(self):
+        # do not remove averaging information
+        # self.average_reward.reset()
         # Reset queue, vehicles at nodes AND in travel
         for i in range(self.node):
             self.vehicles[i] = 0

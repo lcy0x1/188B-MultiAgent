@@ -1,11 +1,11 @@
 {
   "node": 16,
-  "vehicle": 640,
-  "max_queue": 100,
+  "vehicle": 200,
+  "max_queue": 10,
   "poisson_param": 1,
   "operation_cost": 0,
   "waiting_penalty": 0.2,
-  "overflow": 10,
+  "overflow": 1,
   "poisson_cap": 3,
   "edge_lengths": [
     0,1,2,3,1,2,3,4,2,3,4,5,3,4,5,6,
