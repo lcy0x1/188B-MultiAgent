@@ -58,7 +58,7 @@ class AverageQueue:
     def add(self, val):
         self.sum = self.sum - self.list[self.index] + val
         self.list[self.index] = val
-        self.count = max(self.cap, self.count + 1)
+        self.count = min(self.cap, self.count + 1)
         self.index = (self.index + 1) % self.cap
 
     def average(self):
@@ -112,7 +112,7 @@ class VehicleEnv(gym.Env):
         self.random: Optional[RandomState] = None
         self.observation_space = spaces.MultiDiscrete(
             [self.vehicle + 1 for _ in range(self.node)] +  # vehicles
-            [self.vehicle * self.bounds[i] + 1 for i in range(self.node)] +  # vehicles
+            [self.vehicle + 1 for _ in range(self.node * self.mini_node_layer)] +  # vehicles
             [self.queue_size + 1 for _ in range(self.node)] +  # queue
             [self.queue_size * (self.node - 1) + 1 for _ in range(self.node)] +  # queue at other nodes
             ([self.max_edge + 1 for _ in range(self.node)] if self.include_edge else []) +
@@ -163,6 +163,9 @@ class VehicleEnv(gym.Env):
             overf = 0
             rew = 0
 
+            stats_queue = 0
+            stats_price = 0
+
             # Move cars in mini-nodes ahead
             for i in range(self.node):
                 for j in range(self.node):
@@ -177,7 +180,6 @@ class VehicleEnv(gym.Env):
                             # Vehicles still in mini nodes (traveling)
                             # Shifting vehicles further along path
                             self.mini_vehicles[i][j][m - 1] = self.mini_vehicles[i][j][m]
-                        op_cost += self.mini_vehicles[i][j][m] * self.operating_cost
                         self.mini_vehicles[i][j][m] = 0
 
             for i in range(self.node):
@@ -196,9 +198,9 @@ class VehicleEnv(gym.Env):
                         self.vehicles[j] += veh_motion
                     self.vehicles[i] -= veh_motion
                     self.queue[i][j] = max(0, self.queue[i][j] - veh_motion)
-                    op_cost += veh_motion * self.operating_cost
-                    price = self.action_cache[i].price[j]
                     edge_len = self.edge_matrix[i][j]
+                    op_cost += veh_motion * self.operating_cost * edge_len
+                    price = self.action_cache[i].price[j]
                     wait_pen += self.queue[i][j] * self.waiting_penalty * edge_len
                     freq = self.poisson_param * (1 - price) / edge_len
                     request = min(self.poisson_cap, self.random.poisson(freq))
@@ -208,6 +210,8 @@ class VehicleEnv(gym.Env):
                     overf += (request - act_req) * self.overflow * edge_len
                     self.queue[i][j] = self.queue[i][j] + act_req
                     rew += act_req * price * edge_len
+                    stats_price += price
+                    stats_queue += self.queue[i][j]
 
             reward = rew - op_cost - wait_pen - overf
             current_reward = reward
@@ -215,7 +219,8 @@ class VehicleEnv(gym.Env):
                 current_reward -= self.average_reward.average()
             self.average_reward.add(reward)
             debuf_info = {'loss': rew, 'operating_cost': op_cost, 'wait_penalty': wait_pen, 'overflow': overf,
-                          'reward': reward}
+                          'reward': reward, 'avg_price': stats_price / self.node / (self.node - 1),
+                          'avg_queue': stats_queue / self.node / (self.node - 1)}
             return self.to_observation(), current_reward, False, debuf_info
         return self.to_observation(), 0, False, {}
 

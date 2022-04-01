@@ -20,8 +20,8 @@ def make_env(env_id, rank, seed=0):
         env = gym.make(env_id)
         env.seed(seed + rank)
         print("initial state: ", env.reset())
-        print("Action Space: ", env.observation_space)
-        print("Observation Space: ", env.action_space)
+        print("Observation Space: ", env.observation_space)
+        print("Action Space: ", env.action_space)
         return env
 
     set_random_seed(seed)
@@ -60,26 +60,43 @@ if __name__ == "__main__":
     # model.set_env(env)
 
     nid = "avg_" + id
-    dire = f"./data/n16v200-nonsym/{network_type}-lr{lrate}/"
+    dire = f"./data/n9v150ns/{network_type}-lr{lrate}/"
 
     for i in range(mil_steps):
         model.learn(total_timesteps=1_000_000)
         model.save(dire + f"{nid}/{i + 1}")
         accu = 0
 
-        list_sums = []
+        list_reward = []
+        list_lf = []
+        list_q = []
+        list_p = []
         for _ in range(eval_n):
-            sums = 0
+            sum_reward = np.zeros((8,))
+            sum_queue = np.zeros((8,))
+            sum_price = np.zeros((8,))
             j = 0
             obs = env.reset()
             for _ in range(eval_m * eval_k):
                 j += 1
                 action, _states = model.predict(obs)
                 obs, rewards, dones, info = env.step(action)
-                sums = sums + rewards
-            list_sums.extend((sums / eval_m).tolist())
-        with open(dire + f"{nid}.tsv", 'a') as out_file:
+                if j % eval_k == 0:
+                    sum_reward += np.array([v['reward'] for v in info])
+                    sum_queue += np.array([v['avg_queue'] for v in info])
+                    sum_price += np.array([v['avg_price'] for v in info])
+            list_reward.extend((sum_reward / eval_m).tolist())
+            list_q.extend((sum_queue / eval_m).tolist())
+            list_p.extend((sum_price / eval_m).tolist())
+        with open(dire + f"{nid}stats/reward.tsv", 'a') as out_file:
             tsv_writer = csv.writer(out_file, delimiter='\t')
-            tsv_writer.writerow(list_sums)
-        print(f"{network_type}/{nid}/{i + 1}: average return: ", statistics.mean(list_sums), ", stdev = ",
-              statistics.stdev(list_sums))
+            tsv_writer.writerow(list_reward)
+        with open(dire + f"{nid}stats/queue.tsv", 'a') as out_file:
+            tsv_writer = csv.writer(out_file, delimiter='\t')
+            tsv_writer.writerow(list_q)
+        with open(dire + f"{nid}stats/price.tsv", 'a') as out_file:
+            tsv_writer = csv.writer(out_file, delimiter='\t')
+            tsv_writer.writerow(list_p)
+        print(f"{network_type}/{nid}/{i + 1}: average return: ", statistics.mean(list_reward), ", stdev = ", statistics.stdev(list_reward))
+        print(f"{network_type}/{nid}/{i + 1}: average queue: ", statistics.mean(list_q), ", stdev = ", statistics.stdev(list_q))
+        print(f"{network_type}/{nid}/{i + 1}: average price: ", statistics.mean(list_p), ", stdev = ", statistics.stdev(list_p))
