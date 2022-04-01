@@ -54,6 +54,12 @@ python3 training/mix.py symmetric-v0 128 3 30 100 100 16 30 "-lr3/edge_symmetric
 python3 training/mix.py symmetric-v0 128 3 30 100 100 16 30 "-lr30/edge_symmetric-v0/30.zip" continue
 
 
+python3 training/cls.py symmetric-v0 128 2 50 100 100 9 3
+python3 training/cls.py symmetric-v0 128 3 50 100 100 9 3
+python3 training/cls.py symmetric-v0 256 2 50 100 100 9 3
+python3 training/cls.py symmetric-v0 128 2 50 100 100 9 30
+python3 training/cls.py symmetric-v0 128 3 50 100 100 9 30
+python3 training/cls.py symmetric-v0 256 2 50 100 100 9 30
 
 ```
 

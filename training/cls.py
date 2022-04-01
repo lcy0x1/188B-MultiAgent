@@ -1,5 +1,6 @@
 import csv
 import json
+import os
 import statistics
 import sys
 
@@ -88,6 +89,9 @@ if __name__ == "__main__":
             list_reward.extend((sum_reward / eval_m).tolist())
             list_q.extend((sum_queue / eval_m).tolist())
             list_p.extend((sum_price / eval_m).tolist())
+
+        filename = dire + f"{nid}stats/reward.tsv"
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
         with open(dire + f"{nid}stats/reward.tsv", 'a') as out_file:
             tsv_writer = csv.writer(out_file, delimiter='\t')
             tsv_writer.writerow(list_reward)
