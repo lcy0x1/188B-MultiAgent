@@ -72,10 +72,16 @@ if __name__ == "__main__":
         list_lf = []
         list_q = []
         list_p = []
+        list_opcost = []
+        list_waitpen = []
+        list_overf = []
         for _ in range(eval_n):
             sum_reward = np.zeros((8,))
             sum_queue = np.zeros((8,))
             sum_price = np.zeros((8,))
+            sum_opcost = np.zeros((8,))
+            sum_waitpen = np.zeros((8,))
+            sum_overf = np.zeros((8,))
             j = 0
             obs = env.reset()
             for _ in range(eval_m * eval_k):
@@ -86,9 +92,15 @@ if __name__ == "__main__":
                     sum_reward += np.array([v['reward'] for v in info])
                     sum_queue += np.array([v['avg_queue'] for v in info])
                     sum_price += np.array([v['avg_price'] for v in info])
+                    sum_opcost += np.array([v['operating_cost'] for v in info])
+                    sum_waitpen += np.array([v['wait_penalty'] for v in info])
+                    sum_overf += np.array([v['overflow'] for v in info])
             list_reward.extend((sum_reward / eval_m).tolist())
             list_q.extend((sum_queue / eval_m).tolist())
             list_p.extend((sum_price / eval_m).tolist())
+            list_opcost.extend((sum_opcost / eval_m).tolist())
+            list_waitpen.extend((sum_waitpen / eval_m).tolist())
+            list_overf.extend((sum_overf / eval_m).tolist())
 
         filename = dire + f"{nid}stats/reward.tsv"
         os.makedirs(os.path.dirname(filename), exist_ok=True)
@@ -101,6 +113,10 @@ if __name__ == "__main__":
         with open(dire + f"{nid}stats/price.tsv", 'a') as out_file:
             tsv_writer = csv.writer(out_file, delimiter='\t')
             tsv_writer.writerow(list_p)
-        print(f"{network_type}/{nid}/{i + 1}: average return: ", statistics.mean(list_reward), ", stdev = ", statistics.stdev(list_reward))
-        print(f"{network_type}/{nid}/{i + 1}: average queue: ", statistics.mean(list_q), ", stdev = ", statistics.stdev(list_q))
-        print(f"{network_type}/{nid}/{i + 1}: average price: ", statistics.mean(list_p), ", stdev = ", statistics.stdev(list_p))
+        print(f"{network_type}/{nid}/{i + 1}: average return: ", statistics.mean(list_reward),
+              ", stdev = ",statistics.stdev(list_reward))
+        print(f"{network_type}/{nid}/{i + 1}: average queue: ", statistics.mean(list_q))
+        print(f"{network_type}/{nid}/{i + 1}: average price: ", statistics.mean(list_p))
+        print(f"{network_type}/{nid}/{i + 1}: average opcost: ", statistics.mean(list_opcost))
+        print(f"{network_type}/{nid}/{i + 1}: average waitpen: ", statistics.mean(list_waitpen))
+        print(f"{network_type}/{nid}/{i + 1}: average overf: ", statistics.mean(list_overf))
