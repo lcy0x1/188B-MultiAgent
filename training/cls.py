@@ -61,27 +61,19 @@ if __name__ == "__main__":
     # model.set_env(env)
 
     nid = "avg_" + id
-    dire = f"./data/n9v150ns/{network_type}-lr{lrate}/"
+    dire = f"./data/n9v60ns/{network_type}-lr{lrate}/"
+
+    debug_info = ["reward", "queue", "price", "gain", "operating_cost", "wait_penalty", "overflow"]
 
     for i in range(mil_steps):
         model.learn(total_timesteps=1_000_000)
         model.save(dire + f"{nid}/{i + 1}")
         accu = 0
 
-        list_reward = []
-        list_lf = []
-        list_q = []
-        list_p = []
-        list_opcost = []
-        list_waitpen = []
-        list_overf = []
+        lists = {key: [] for key in debug_info}
+
         for _ in range(eval_n):
-            sum_reward = np.zeros((8,))
-            sum_queue = np.zeros((8,))
-            sum_price = np.zeros((8,))
-            sum_opcost = np.zeros((8,))
-            sum_waitpen = np.zeros((8,))
-            sum_overf = np.zeros((8,))
+            sums = {key: np.zeros((num_cpu,)) for key in debug_info}
             j = 0
             obs = env.reset()
             for _ in range(eval_m * eval_k):
@@ -89,34 +81,16 @@ if __name__ == "__main__":
                 action, _states = model.predict(obs)
                 obs, rewards, dones, info = env.step(action)
                 if j % eval_k == 0:
-                    sum_reward += np.array([v['reward'] for v in info])
-                    sum_queue += np.array([v['avg_queue'] for v in info])
-                    sum_price += np.array([v['avg_price'] for v in info])
-                    sum_opcost += np.array([v['operating_cost'] for v in info])
-                    sum_waitpen += np.array([v['wait_penalty'] for v in info])
-                    sum_overf += np.array([v['overflow'] for v in info])
-            list_reward.extend((sum_reward / eval_m).tolist())
-            list_q.extend((sum_queue / eval_m).tolist())
-            list_p.extend((sum_price / eval_m).tolist())
-            list_opcost.extend((sum_opcost / eval_m).tolist())
-            list_waitpen.extend((sum_waitpen / eval_m).tolist())
-            list_overf.extend((sum_overf / eval_m).tolist())
+                    for k in debug_info:
+                        sums[k] += np.array(([v[k] for v in info]))
+            for k in debug_info:
+                lists[k].extend((sums[k] / eval_m).tolist())
 
-        filename = dire + f"{nid}stats/reward.tsv"
+        filename = dire + f"{nid}/stats/reward.tsv"
         os.makedirs(os.path.dirname(filename), exist_ok=True)
-        with open(dire + f"{nid}stats/reward.tsv", 'a') as out_file:
-            tsv_writer = csv.writer(out_file, delimiter='\t')
-            tsv_writer.writerow(list_reward)
-        with open(dire + f"{nid}stats/queue.tsv", 'a') as out_file:
-            tsv_writer = csv.writer(out_file, delimiter='\t')
-            tsv_writer.writerow(list_q)
-        with open(dire + f"{nid}stats/price.tsv", 'a') as out_file:
-            tsv_writer = csv.writer(out_file, delimiter='\t')
-            tsv_writer.writerow(list_p)
-        print(f"{network_type}/{nid}/{i + 1}: average return: ", statistics.mean(list_reward),
-              ", stdev = ",statistics.stdev(list_reward))
-        print(f"{network_type}/{nid}/{i + 1}: average queue: ", statistics.mean(list_q))
-        print(f"{network_type}/{nid}/{i + 1}: average price: ", statistics.mean(list_p))
-        print(f"{network_type}/{nid}/{i + 1}: average opcost: ", statistics.mean(list_opcost))
-        print(f"{network_type}/{nid}/{i + 1}: average waitpen: ", statistics.mean(list_waitpen))
-        print(f"{network_type}/{nid}/{i + 1}: average overf: ", statistics.mean(list_overf))
+        for k in debug_info:
+            with open(dire + f"{nid}/stats/{k}.tsv", 'a') as out_file:
+                tsv_writer = csv.writer(out_file, delimiter='\t')
+                tsv_writer.writerow(lists[k])
+        for k in debug_info:
+            print(f"{network_type}/{nid}/{i + 1}: {k}: ", statistics.mean(lists[k]))

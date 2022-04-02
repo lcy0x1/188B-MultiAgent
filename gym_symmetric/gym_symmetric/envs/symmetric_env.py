@@ -208,7 +208,7 @@ class VehicleEnv(gym.Env):
                     if self.queue[i][j] + act_req > self.queue_size:
                         act_req = 0
                     overf += (request - act_req) * self.overflow * edge_len
-                    self.queue[i][j] = self.queue[i][j] + act_req
+                    self.queue[i][j] += act_req
                     rew += act_req * price * edge_len
                     stats_price += price
                     stats_queue += self.queue[i][j]
@@ -218,9 +218,9 @@ class VehicleEnv(gym.Env):
             if self.use_average_reward:
                 current_reward -= self.average_reward.average()
             self.average_reward.add(reward)
-            debuf_info = {'loss': rew, 'operating_cost': op_cost, 'wait_penalty': wait_pen, 'overflow': overf,
-                          'reward': reward, 'avg_price': stats_price / self.node / (self.node - 1),
-                          'avg_queue': stats_queue / self.node / (self.node - 1)}
+            debuf_info = {'gain': rew, 'operating_cost': op_cost, 'wait_penalty': wait_pen, 'overflow': overf,
+                          'reward': reward, 'price': stats_price / self.node / (self.node - 1),
+                          'queue': stats_queue / self.node / (self.node - 1)}
             return self.to_observation(), current_reward, False, debuf_info
         return self.to_observation(), 0, False, {}
 

@@ -1,6 +1,6 @@
 {
   "node": 9,
-  "vehicle": 150,
+  "vehicle": 60,
   "max_queue": 10,
   "poisson_param": 1,
   "operation_cost": 0.1,
@@ -8,7 +8,7 @@
   "overflow": 1,
   "poisson_cap": 3,
 
-  "average_reward": true,
+  "average_reward": false,
   "average_queue": 30,
   "average_reset": false,
   "include_edge": false,
@@ -24,6 +24,5 @@
 ,2,3,4,1,2,3,0,1,2
 ,3,2,3,2,1,2,1,0,1
 ,4,3,2,3,2,1,2,1,0
-
   ]
 }
