@@ -157,72 +157,76 @@ class VehicleEnv(gym.Env):
         self.action_cache[self.current_index] = action
         self.current_index += 1
         if self.current_index == self.node:
-            self.current_index = 0
-            op_cost = 0
-            wait_pen = 0
-            overf = 0
-            rew = 0
-
-            stats_queue = 0
-            stats_price = 0
-
-            # Move cars in mini-nodes ahead
-            for i in range(self.node):
-                for j in range(self.node):
-                    if i == j:
-                        continue
-                    # Sweeping BACKWARDS to avoid pushing vehicles multiple times in same time step
-                    for m in range(self.edge_matrix[i][j] - 1):
-                        if m == 0:
-                            # Stop tracking mini-node behavior and push cars to main node
-                            self.vehicles[j] += self.mini_vehicles[i][j][m]
-                        else:
-                            # Vehicles still in mini nodes (traveling)
-                            # Shifting vehicles further along path
-                            self.mini_vehicles[i][j][m - 1] = self.mini_vehicles[i][j][m]
-                        self.mini_vehicles[i][j][m] = 0
-
-            for i in range(self.node):
-                for j in range(self.node):
-                    if i == j:
-                        continue
-                    veh_motion = self.action_cache[i].motion[j]
-                    # Statement to feed to mini-nodes
-                    # Only feed to mini nodes if required (edge length > 1)   ->   Feed to first mini-node
-                    if self.edge_matrix[i][j] > 1:
-                        # for distance 2, it feeds to the 1st mininode (index 0)
-                        # for distance 5, it feeds to the 4th mininode (index 3)
-                        self.mini_vehicles[i][j][self.edge_matrix[i][j] - 2] += veh_motion
-                    else:
-                        # Cars arriving at node j (for length 1 case)
-                        self.vehicles[j] += veh_motion
-                    self.vehicles[i] -= veh_motion
-                    self.queue[i][j] = max(0, self.queue[i][j] - veh_motion)
-                    edge_len = self.edge_matrix[i][j]
-                    op_cost += veh_motion * self.operating_cost * edge_len
-                    price = self.action_cache[i].price[j]
-                    wait_pen += self.queue[i][j] * self.waiting_penalty * edge_len
-                    freq = self.poisson_param * (1 - price) / edge_len
-                    request = min(self.poisson_cap, self.random.poisson(freq))
-                    act_req = request
-                    if self.queue[i][j] + act_req > self.queue_size:
-                        act_req = 0
-                    overf += (request - act_req) * self.overflow * edge_len
-                    self.queue[i][j] += act_req
-                    rew += act_req * price * edge_len
-                    stats_price += price
-                    stats_queue += self.queue[i][j]
-
-            reward = rew - op_cost - wait_pen - overf
-            current_reward = reward
-            if self.use_average_reward:
-                current_reward -= self.average_reward.average()
-            self.average_reward.add(reward)
-            debuf_info = {'gain': rew, 'operating_cost': op_cost, 'wait_penalty': wait_pen, 'overflow': overf,
-                          'reward': reward, 'price': stats_price / self.node / (self.node - 1),
-                          'queue': stats_queue / self.node / (self.node - 1)}
-            return self.to_observation(), current_reward, False, debuf_info
+            reward, info = self.cycle_step()
+            return self.to_observation(), reward, False, info
         return self.to_observation(), 0, False, {}
+
+    def cycle_step(self):
+        self.current_index = 0
+        op_cost = 0
+        wait_pen = 0
+        overf = 0
+        rew = 0
+
+        stats_queue = 0
+        stats_price = 0
+
+        # Move cars in mini-nodes ahead
+        for i in range(self.node):
+            for j in range(self.node):
+                if i == j:
+                    continue
+                # Sweeping BACKWARDS to avoid pushing vehicles multiple times in same time step
+                for m in range(self.edge_matrix[i][j] - 1):
+                    if m == 0:
+                        # Stop tracking mini-node behavior and push cars to main node
+                        self.vehicles[j] += self.mini_vehicles[i][j][m]
+                    else:
+                        # Vehicles still in mini nodes (traveling)
+                        # Shifting vehicles further along path
+                        self.mini_vehicles[i][j][m - 1] = self.mini_vehicles[i][j][m]
+                    self.mini_vehicles[i][j][m] = 0
+
+        for i in range(self.node):
+            for j in range(self.node):
+                if i == j:
+                    continue
+                veh_motion = self.action_cache[i].motion[j]
+                # Statement to feed to mini-nodes
+                # Only feed to mini nodes if required (edge length > 1)   ->   Feed to first mini-node
+                if self.edge_matrix[i][j] > 1:
+                    # for distance 2, it feeds to the 1st mininode (index 0)
+                    # for distance 5, it feeds to the 4th mininode (index 3)
+                    self.mini_vehicles[i][j][self.edge_matrix[i][j] - 2] += veh_motion
+                else:
+                    # Cars arriving at node j (for length 1 case)
+                    self.vehicles[j] += veh_motion
+                self.vehicles[i] -= veh_motion
+                self.queue[i][j] = max(0, self.queue[i][j] - veh_motion)
+                edge_len = self.edge_matrix[i][j]
+                op_cost += veh_motion * self.operating_cost * edge_len
+                price = self.action_cache[i].price[j]
+                wait_pen += self.queue[i][j] * self.waiting_penalty * edge_len
+                freq = self.poisson_param * (1 - price) / edge_len
+                request = min(self.poisson_cap, self.random.poisson(freq))
+                act_req = request
+                if self.queue[i][j] + act_req > self.queue_size:
+                    act_req = 0
+                overf += (request - act_req) * self.overflow * edge_len
+                self.queue[i][j] += act_req
+                rew += act_req * price * edge_len
+                stats_price += price
+                stats_queue += self.queue[i][j]
+
+        reward = rew - op_cost - wait_pen - overf
+        current_reward = reward
+        if self.use_average_reward:
+            current_reward -= self.average_reward.average()
+        self.average_reward.add(reward)
+        debug_info = {'gain': rew, 'operating_cost': op_cost, 'wait_penalty': wait_pen, 'overflow': overf,
+                      'reward': reward, 'price': stats_price / self.node / (self.node - 1),
+                      'queue': stats_queue / self.node / (self.node - 1)}
+        return current_reward, debug_info
 
     def reset(self):
         if self.average_queue_reset:
@@ -241,6 +245,12 @@ class VehicleEnv(gym.Env):
         self.over = 0
         self.current_index = 0
         return self.to_observation()
+
+    def copy_from(self, env):
+        self.vehicles = [env.vehicles[i] for i in range(self.node)]
+        self.queue = [[env.queue[i][j] for j in range(self.node)] for i in range(self.node)]
+        self.mini_vehicles = [[[env.mini_vehicles[i][j][k] for k in range(self.edge_matrix[i][j] - 1)]
+                               for j in range(self.node)] for i in range(self.node)]
 
     def render(self, mode='human'):
         pass
@@ -274,3 +284,125 @@ class VehicleEnv(gym.Env):
                 ind += 1
         arr[ind] = self.current_index
         return arr
+
+
+class Imitated:
+
+    def __init__(self, env: VehicleEnv):
+        self.env = env
+        self.dummy = VehicleEnv(env.config)
+        self.time_factor = 0.5
+        self.dist_factor = 0.3
+        self.queue_factor = 0.5
+        self.queue_intention = 1
+        self.distribute_factor = 0.3
+        self.price_intention = 0.2
+
+    def compute_action(self):
+        vehicle_gradient = self.compute_gradient(self.env.vehicles, self.env.mini_vehicles, self.env.queue)
+        # calculate action
+        vehicle_motion = [[0 for _ in range(self.env.node)] for _ in range(self.env.node)]
+        for i in range(self.env.node):
+            if self.env.vehicles[i] == 0:
+                continue
+            intentions = 0
+            for j in range(self.env.node):
+                intentions += vehicle_gradient[i][j]
+            factor = 1
+            remain = self.env.vehicles[i] - intentions
+            if intentions > self.env.vehicles[i]:
+                factor = self.env.vehicles[i] / intentions
+                remain = 0
+
+            for j in range(self.env.node):
+                vehicle_motion[i][j] = vehicle_gradient[i][j] * factor
+
+            vehicle_motion[i][i] = remain
+
+            sums = sum(vehicle_motion[i])
+
+            for j in range(self.env.node):
+                vehicle_motion[i][j] /= sums
+
+        # imitate
+        self.dummy.copy_from(self.env)
+        for i in range(self.env.node):
+            action = vehicle_motion[i].copy()
+            action.extend([1 for _ in range(self.env.node)])
+            self.dummy.step(action)
+
+        # calculate price
+        future_gradient = self.compute_gradient(self.dummy.vehicles, self.dummy.mini_vehicles, self.dummy.queue)
+        price = [[0 for _ in range(self.env.node)] for _ in range(self.env.node)]
+
+        action = []
+        for i in range(self.env.node):
+            intentions = 0
+            for j in range(self.env.node):
+                intentions += future_gradient[i][j]
+            factor = 1
+            remain = self.dummy.vehicles[i] - intentions
+            if intentions > self.dummy.vehicles[i]:
+                factor = self.dummy.vehicles[i] / intentions
+                remain = 0
+            no_remain = remain / (self.env.node - 1)
+            for j in range(self.env.node):
+                intention = future_gradient[i][j] * factor + no_remain - self.dummy.queue[i][j]
+                price[i][j] = self.compute_best_price(intention)
+            single_action = vehicle_motion[i].copy()
+            single_action.extend(price[i])
+            action.append(single_action)
+
+        return action
+
+    def compute_gradient(self, vehicles, mini_vehicles, queue):
+
+        vehicle_potential = [0 for _ in range(self.env.node)]
+        # compute vehicle availability
+        # currently available vehicles - current queue +
+        # upcoming vehicle * time factor ^ distance +
+        # vehicle availability * queue ratio * queue_factor * time factor ^ distance
+        for i in range(self.env.node):
+            potential = 0
+            potential -= sum(queue[i])
+            potential += vehicles[i]
+            for j in range(self.env.node):
+                for k in range(self.env.edge_matrix[j][i] - 1):
+                    potential += mini_vehicles[j][i][k] * self.time_factor ** k
+            vehicle_potential[i] = potential
+
+        # calculate relative potential
+        average_potential = sum(vehicle_potential) / self.env.node
+        vehicle_diff = [0 for _ in range(self.env.node)]
+        for i in range(self.env.node):
+            vehicle_diff[i] = vehicle_potential[i] - average_potential
+
+        # add queue potential
+        for i in range(self.env.node):
+            potential = 0
+            for j in range(self.env.node):
+                availability = max(0, min(vehicle_diff[j], queue[j][i]))
+                queue_ratio = 0 if queue[j][i] == 0 else queue[j][i] / sum(queue[j])
+                time_discount = self.time_factor ** self.env.edge_matrix[j][i]
+                potential += availability * queue_ratio * self.queue_factor * time_discount
+            vehicle_potential[i] += potential
+
+        # calculate vehicle gradient
+        vehicle_gradient = [[0 for _ in range(self.env.node)] for _ in range(self.env.node)]
+        for i in range(self.env.node):
+            for j in range(self.env.node):
+                diff = (vehicle_potential[i] - vehicle_potential[j]) * self.distribute_factor
+                if diff > 0:
+                    grad = diff * self.dist_factor ** self.env.edge_matrix[i][j] / self.env.node
+                    vehicle_gradient[i][j] += grad
+                if diff < 0:
+                    grad = diff * self.dist_factor ** self.env.edge_matrix[j][i] / self.env.node
+                    vehicle_gradient[j][i] += grad
+                vehicle_gradient[i][j] += queue[i][j] * self.queue_intention
+
+        return vehicle_gradient
+
+    def compute_best_price(self, intention):
+        if intention < 0:
+            return 1
+        return max(0.5 + self.env.operating_cost / 2, 1 - intention * self.price_intention)
