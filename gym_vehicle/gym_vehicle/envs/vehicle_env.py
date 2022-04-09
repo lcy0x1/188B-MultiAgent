@@ -231,4 +231,4 @@ class VehicleEnv(gym.Env):
                 ind += 1
         return arr
 
-    # Testing push
+    # Testing pushd
