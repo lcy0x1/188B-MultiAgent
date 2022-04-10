@@ -76,7 +76,7 @@ class AverageQueue:
 class VehicleEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, config=None, seed=0):
+    def __init__(self, config=None, seed=0, imitate=True):
         if config is None:
             config = json.load(open(pkg_resources.resource_filename(__name__, "./config.json")))
         self.config = config
@@ -93,6 +93,8 @@ class VehicleEnv(gym.Env):
         self.average_queue_reset = self.config["average_reset"]
         self.include_edge = self.config["include_edge"]
         self.mini_node_layer = self.config["mini_node_layer"]
+        self.multi_agent = self.config["multi_agent"]
+        self.imitate = imitate and self.config["imitate"]
 
         self.vehicles = [0 for _ in range(self.node)]
         self.queue = [[0 for _ in range(self.node)] for _ in range(self.node)]
@@ -110,14 +112,22 @@ class VehicleEnv(gym.Env):
         self.action_cache: List[Optional[VehicleAction]] = [None for _ in range(self.node)]
         self.over = 0
         self.random: Optional[RandomState] = None
-        self.observation_space = spaces.MultiDiscrete(
-            [self.vehicle + 1 for _ in range(self.node)] +  # vehicles
-            [self.vehicle + 1 for _ in range(self.node * self.mini_node_layer)] +  # vehicles
-            [self.queue_size + 1 for _ in range(self.node)] +  # queue
-            [self.queue_size * (self.node - 1) + 1 for _ in range(self.node)] +  # queue at other nodes
-            ([self.max_edge + 1 for _ in range(self.node)] if self.include_edge else []) +
-            [self.node])  # state
-        self.action_space = spaces.Box(0, 1, (self.node * 2,))
+
+        if self.multi_agent:
+            self.observation_space = spaces.MultiDiscrete(
+                [self.vehicle + 1 for _ in range(self.node)] +  # vehicles
+                [self.vehicle + 1 for _ in range(self.node * self.mini_node_layer)] +  # vehicles
+                [self.queue_size + 1 for _ in range(self.node)] +  # queue
+                [self.queue_size * (self.node - 1) + 1 for _ in range(self.node)] +  # queue at other nodes
+                ([self.max_edge + 1 for _ in range(self.node)] if self.include_edge else []) +
+                [self.node])  # state
+            self.action_space = spaces.Box(0, 1, (self.node * 2,))
+        else:
+            self.observation_space = spaces.MultiDiscrete(
+                [self.vehicle + 1 for _ in range(self.node)] +  # vehicles
+                [self.vehicle + 1 for _ in range(self.node * self.mini_node_layer)] +  # mininode
+                [self.queue_size + 1 for _ in range(self.node * (self.node - 1))])  # queue
+            self.action_space = spaces.Box(0, 1, (self.node ** 2 * 2,))
 
         # Stores number of vehicles at mini node between i and j
         self.mini_vehicles = [[[0 for _ in range(self.edge_matrix[i][j] - 1)]
@@ -127,6 +137,9 @@ class VehicleEnv(gym.Env):
 
         self.average_reward = AverageQueue(self.average_queue_length)
         self.seed(seed)
+
+        if self.imitate:
+            self.imitation = Imitated(self)
 
     def seed(self, seed=None):
         self.random, _ = seeding.np_random(seed)
@@ -153,15 +166,30 @@ class VehicleEnv(gym.Env):
                     sys.exit()
 
     def step(self, act):
+        if self.multi_agent:
+            self.node_step(act)
+            if self.current_index == self.node:
+                reward, info = self.cycle_proceed()
+                return self.to_observation(), reward, False, info
+            return self.to_observation(), 0, False, {}
+        else:
+            for i in range(self.node):
+                self.action_cache[i] = VehicleAction(self, i, act[i * self.node * 2:(i + 1) * self.node * 2])
+            reward, info = self.cycle_proceed()
+            return self.to_observation(), reward, False, info
+
+    def cycle_step(self, act):
+        for step in range(self.node):
+            self.node_step(act[step])
+        reward, info = self.cycle_proceed()
+        return self.to_observation(), reward, False, info
+
+    def node_step(self, act):
         action = VehicleAction(self, self.current_index, act)
         self.action_cache[self.current_index] = action
         self.current_index += 1
-        if self.current_index == self.node:
-            reward, info = self.cycle_step()
-            return self.to_observation(), reward, False, info
-        return self.to_observation(), 0, False, {}
 
-    def cycle_step(self):
+    def cycle_proceed(self):
         self.current_index = 0
         op_cost = 0
         wait_pen = 0
@@ -170,6 +198,10 @@ class VehicleEnv(gym.Env):
 
         stats_queue = 0
         stats_price = 0
+
+        difference = 0
+        if self.imitate:
+            difference = self.calculate_imitation_reward()
 
         # Move cars in mini-nodes ahead
         for i in range(self.node):
@@ -223,10 +255,24 @@ class VehicleEnv(gym.Env):
         if self.use_average_reward:
             current_reward -= self.average_reward.average()
         self.average_reward.add(reward)
+        if self.imitate:
+            current_reward = difference
         debug_info = {'gain': rew, 'operating_cost': op_cost, 'wait_penalty': wait_pen, 'overflow': overf,
                       'reward': reward, 'price': stats_price / self.node / (self.node - 1),
-                      'queue': stats_queue / self.node / (self.node - 1)}
+                      'queue': stats_queue / self.node / (self.node - 1), 'imitation_reward': difference}
         return current_reward, debug_info
+
+    def calculate_imitation_reward(self):
+        diff = 0
+        reference = self.imitation.compute_action()
+        factor = self.vehicle / self.node / self.node
+        for i in range(self.node):
+            ref_action = VehicleAction(self, i, reference[i])
+            self_action = self.action_cache[i]
+            for j in range(self.node):
+                diff += (ref_action.motion[j] - self_action.motion[j]) ** 2
+                diff += (ref_action.price[j] - self_action.price[j]) ** 2 * factor
+        return -diff
 
     def reset(self):
         if self.average_queue_reset:
@@ -259,38 +305,61 @@ class VehicleEnv(gym.Env):
         pass
 
     def to_observation(self):
-        arr = [0 for _ in range(self.node * (3 + (1 if self.include_edge else 0) + self.mini_node_layer) + 1)]
-        ind = 0
-        for i in range(self.node):
-            arr[ind] = self.vehicles[i]
-            ind += 1
-        for j in range(self.node):
-            sums = [0 for _ in range(self.bounds[j] - 1)]
+        if self.multi_agent:
+            arr = [0 for _ in range(self.node * (3 + (1 if self.include_edge else 0) + self.mini_node_layer) + 1)]
+            ind = 0
             for i in range(self.node):
-                for k in range(self.edge_matrix[i][j] - 1):
-                    sums[k] += self.mini_vehicles[i][j][k]
-            for i in range(self.mini_node_layer):
-                arr[ind] = self.mini_node_processor(sums, i, j)
+                arr[ind] = self.vehicles[i]
                 ind += 1
-        for i in range(self.node):
-            arr[ind] = self.queue[self.current_index][i]
-            ind += 1
-        for i in range(self.node):
-            arr[ind] = sum(self.queue[i])
-            ind += 1
-        if self.include_edge:
+            for j in range(self.node):
+                sums = [0 for _ in range(self.bounds[j] - 1)]
+                for i in range(self.node):
+                    for k in range(self.edge_matrix[i][j] - 1):
+                        sums[k] += self.mini_vehicles[i][j][k]
+                for i in range(self.mini_node_layer):
+                    arr[ind] = self.mini_node_processor(sums, i, j)
+                    ind += 1
             for i in range(self.node):
-                arr[ind] = self.edge_matrix[self.current_index][i]
+                arr[ind] = self.queue[self.current_index][i]
                 ind += 1
-        arr[ind] = self.current_index
-        return arr
+            for i in range(self.node):
+                arr[ind] = sum(self.queue[i])
+                ind += 1
+            if self.include_edge:
+                for i in range(self.node):
+                    arr[ind] = self.edge_matrix[self.current_index][i]
+                    ind += 1
+            arr[ind] = self.current_index
+            return arr
+        else:
+            arr = [0 for _ in range(self.node * (self.node + self.mini_node_layer))]
+            ind = 0
+            for i in range(self.node):
+                arr[ind] = self.vehicles[i]
+                ind += 1
+            for j in range(self.node):
+                sums = [0 for _ in range(self.bounds[j] - 1)]
+                for i in range(self.node):
+                    for k in range(self.edge_matrix[i][j] - 1):
+                        sums[k] += self.mini_vehicles[i][j][k]
+                for i in range(self.mini_node_layer):
+                    arr[ind] = self.mini_node_processor(sums, i, j)
+                    ind += 1
+            for i in range(self.node):
+                for j in range(self.node):
+                    if i == j:
+                        continue
+                    arr[ind] = self.queue[i][j]
+                    ind += 1
+            return arr
 
 
 class Imitated:
 
     def __init__(self, env: VehicleEnv):
         self.env = env
-        self.dummy = VehicleEnv(env.config)
+        self.dummy = VehicleEnv(env.config, imitate=False)
+
         self.time_factor = 0.5
         self.dist_factor = 0.3
         self.queue_factor = 0.5
@@ -329,7 +398,8 @@ class Imitated:
         for i in range(self.env.node):
             action = vehicle_motion[i].copy()
             action.extend([1 for _ in range(self.env.node)])
-            self.dummy.step(action)
+            self.dummy.node_step(action)
+        self.dummy.cycle_proceed()
 
         # calculate price
         future_gradient = self.compute_gradient(self.dummy.vehicles, self.dummy.mini_vehicles, self.dummy.queue)

@@ -11,7 +11,6 @@ from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.utils import set_random_seed
-import gym_vehicle
 import gym_symmetric
 from torch import nn
 
@@ -30,18 +29,17 @@ def make_env(env_id, rank, seed=0):
 
 
 if __name__ == "__main__":
-    id = sys.argv[1]
-    layer_n = int(sys.argv[2])
-    layer_l = int(sys.argv[3])
-    mil_steps = int(sys.argv[4])
-    eval_n = int(sys.argv[5])
-    eval_m = int(sys.argv[6])
-    eval_k = int(sys.argv[7])
-    lrate = int(sys.argv[8])
+    layer_n = int(sys.argv[1])
+    layer_l = int(sys.argv[2])
+    mil_steps = int(sys.argv[3])
+    eval_n = int(sys.argv[4])
+    eval_m = int(sys.argv[5])
+    eval_k = int(sys.argv[6])
+    lrate = int(sys.argv[7])
 
     num_cpu = 8  # Number of processes to use
     # Create the vectorized environment
-    env = DummyVecEnv([make_env(id, i) for i in range(num_cpu)])
+    env = DummyVecEnv([make_env("symmetric-v0", i) for i in range(num_cpu)])
 
     # Stable Baselines provides you with make_vec_env() helper
     # which does exactly the previous steps for you.
@@ -60,10 +58,10 @@ if __name__ == "__main__":
     # model = PPO.load("./data/1mil")
     # model.set_env(env)
 
-    nid = "avg_" + id
+    nid = "imitation_single"
     dire = f"./data/n9v60ns/{network_type}-lr{lrate}/"
 
-    debug_info = ["reward", "queue", "price", "gain", "operating_cost", "wait_penalty", "overflow"]
+    debug_info = ["reward", "queue", "price", "gain", "operating_cost", "wait_penalty", "overflow", "imitation_reward"]
 
     for i in range(mil_steps):
         model.learn(total_timesteps=1_000_000)

@@ -13,10 +13,8 @@ cumulative_reward = 0
 cumulative_square = 0
 for cycle in range(n):
     action = imitate.compute_action()
-    reward = 0
-    info = {}
-    for step in range(env.node):
-        _, reward, _, info = env.step(action[step])
+    _, reward, _, info = env.cycle_step(action)
+    reward = reward
     cumulative_reward += reward
     cumulative_square += reward ** 2
 
