@@ -59,7 +59,7 @@ if __name__ == "__main__":
     # model.set_env(env)
 
     nid = "multi-agent"
-    dire = f"./data/n6v30ns/{network_type}-lr{lrate}/"
+    dire = f"./data/n8v60sym/{network_type}-lr{lrate}/"
 
     debug_info = ["reward", "queue", "price", "gain", "operating_cost", "wait_penalty", "overflow", "imitation_reward"]
 
