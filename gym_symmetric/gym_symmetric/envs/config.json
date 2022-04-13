@@ -8,7 +8,7 @@
   "overflow": 10,
   "poisson_cap": 3,
 
-  "multi_agent": false,
+  "multi_agent": true,
   "imitate": true,
   "average_reward": false,
   "average_queue": 30,
