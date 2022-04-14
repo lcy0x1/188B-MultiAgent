@@ -53,13 +53,13 @@ if __name__ == "__main__":
     network_type = '-'.join(list(map(str, layers)))
     model = PPO('MlpPolicy', env, policy_kwargs=policy_kwargs, verbose=0,
                 gamma=0.99 ** (1 / eval_k), gae_lambda=0.95 ** (1 / eval_k),
-                n_steps=256 * eval_k, learning_rate=lrate * 0.0003)
+                n_steps=256 * eval_k, learning_rate=lrate * 1e-6)
 
     # model = PPO.load("./data/1mil")
     # model.set_env(env)
 
     nid = "multi-agent"
-    dire = f"./data/n8v60sym/{network_type}-lr{lrate}/"
+    dire = f"./data/n8v60sym/{network_type}-lrm{lrate}/"
 
     debug_info = ["reward", "queue", "price", "gain", "operating_cost", "wait_penalty", "overflow", "imitation_reward"]
 
