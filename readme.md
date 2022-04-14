@@ -69,7 +69,7 @@ python3 training/cls.py 128 3 50 100 100 9 3
 python3 training/cls.py 256 2 50 100 100 9 3
 
 
-python3 training/cls.py 128 2 50 100 100 8 40
+python3 training/cls.py 128 2 50 100 100 8 30
 
 ```
 
