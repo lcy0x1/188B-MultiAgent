@@ -73,6 +73,10 @@ python3 training/cls.py 128 2 100 100 100 8 10
 python3 training/cls.py 128 2 100 100 100 8 20
 python3 training/cls.py 128 2 100 100 100 8 30
 
+python3 training/cls.py 128 2 100 100 100 1 10
+python3 training/cls.py 128 2 100 100 100 1 20
+python3 training/cls.py 128 2 100 100 100 1 30
+
 ```
 
 reward normalization
