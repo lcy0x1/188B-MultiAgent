@@ -69,7 +69,7 @@ python3 training/cls.py 128 3 50 100 100 9 3
 python3 training/cls.py 256 2 50 100 100 9 3
 
 
-python3 training/cls.py 128 2 100 100 100 8 10
+python3 training/cls.py 128 2 200 100 100 8 10
 python3 training/cls.py 128 2 100 100 100 8 20
 python3 training/cls.py 128 2 100 100 100 8 30
 
