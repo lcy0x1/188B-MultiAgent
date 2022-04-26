@@ -273,13 +273,13 @@ class VehicleEnv(gym.Env):
     def calculate_imitation_reward(self):
         diff = 0
         reference = self.imitation.compute_action()
-        factor = self.vehicle / self.node / self.node
+        factor = self.vehicle
         for i in range(self.node):
             ref_action = VehicleAction(self, i, reference[i])
             self_action = self.action_cache[i]
             for j in range(self.node):
-                diff += (ref_action.motion[j] - self_action.motion[j]) ** 2
-                diff += (ref_action.price[j] - self_action.price[j]) ** 2 * factor
+                diff += ((ref_action.motion[j] - self_action.motion[j]) / factor) ** 2
+                diff += (ref_action.price[j] - self_action.price[j]) ** 2
         return -diff
 
     def reset(self):

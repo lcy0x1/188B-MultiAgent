@@ -10,7 +10,7 @@
 
   "multi_agent": true,
   "imitate": false,
-  "average_reward": false,
+  "average_reward": true,
   "average_queue": 30,
   "average_reset": false,
   "include_edge": false,
