@@ -103,7 +103,11 @@ class VehicleEnv(gym.Env):
         # Edge matrix: self.edge(0) = 1->2 , self.edge(1) = 2->1     for 2 node case (2 edges)
         # n nodes: self.edge(0) = 1->2 , 1->3 , ... 1->n , 2->1 , 2->3, ... 2->n , ... n->n-2 , n->n-1  (? edges)
         self.edge_list = self.config["edge_lengths"]
+        self.demand_list = self.config["demand_factor"]
+        self.price_list = self.config["price_factor"]
         self.edge_matrix = [[0 for _ in range(self.node)] for _ in range(self.node)]
+        self.demand_factor = [[0 for _ in range(self.node)] for _ in range(self.node)]
+        self.price_factor = [[0 for _ in range(self.node)] for _ in range(self.node)]
         self.bounds = [0 for _ in range(self.node)]
         self.fill_edge_matrix()
         self.max_edge = max(self.bounds)
@@ -154,6 +158,8 @@ class VehicleEnv(gym.Env):
         for i in range(self.node):
             for j in range(self.node):
                 self.edge_matrix[i][j] = self.edge_list[tmp]
+                self.price_factor[i][j] = self.price_list[tmp]
+                self.demand_factor[i][j] = self.demand_list[tmp]
                 self.bounds[j] = max(self.bounds[j], self.edge_matrix[i][j])
                 tmp += 1
                 if i == j:
@@ -238,15 +244,17 @@ class VehicleEnv(gym.Env):
                 edge_len = self.edge_matrix[i][j]
                 op_cost += veh_motion * self.operating_cost * edge_len
                 price = self.action_cache[i].price[j]
-                wait_pen += self.queue[i][j] * self.waiting_penalty * edge_len
-                freq = self.poisson_param * (1 - price) / edge_len
+                price_fac = self.price_factor[i][j]
+                demand_fac = self.demand_factor[i][j]
+                wait_pen += self.queue[i][j] * self.waiting_penalty
+                freq = self.poisson_param * (price - 1) * price_fac / demand_fac
                 request = min(self.poisson_cap, self.random.poisson(freq))
                 act_req = request
                 if self.queue[i][j] + act_req > self.queue_size:
                     act_req = 0
-                overf += (request - act_req) * self.overflow * edge_len
+                overf += (request - act_req) * self.overflow
                 self.queue[i][j] += act_req
-                rew += act_req * price * edge_len
+                rew += act_req * price * price_fac
                 stats_price += price
                 stats_queue += self.queue[i][j]
 
@@ -362,10 +370,13 @@ class Imitated:
 
         self.time_factor = 0.5
         self.dist_factor = 0.3
-        self.queue_factor = 0.5
+        self.queue_factor = 0.4
         self.queue_intention = 1
         self.distribute_factor = 0.3
         self.price_intention = 0.2
+
+        self.operating_cost = 0.6
+        self.data_factor = 40
 
     def compute_action(self):
         vehicle_gradient = self.compute_gradient(self.env.vehicles, self.env.mini_vehicles, self.env.queue)
@@ -376,7 +387,7 @@ class Imitated:
                 continue
             intentions = 0
             for j in range(self.env.node):
-                intentions += vehicle_gradient[i][j]
+                intentions += vehicle_gradient[i][j] * self.data_factor
             factor = 1
             remain = self.env.vehicles[i] - intentions
             if intentions > self.env.vehicles[i]:
@@ -384,7 +395,7 @@ class Imitated:
                 remain = 0
 
             for j in range(self.env.node):
-                vehicle_motion[i][j] = vehicle_gradient[i][j] * factor
+                vehicle_motion[i][j] = vehicle_gradient[i][j] * self.data_factor * factor
 
             vehicle_motion[i][i] = remain
 
@@ -409,7 +420,7 @@ class Imitated:
         for i in range(self.env.node):
             intentions = 0
             for j in range(self.env.node):
-                intentions += future_gradient[i][j]
+                intentions += future_gradient[i][j] * self.data_factor
             factor = 1
             remain = self.dummy.vehicles[i] - intentions
             if intentions > self.dummy.vehicles[i]:
@@ -417,7 +428,7 @@ class Imitated:
                 remain = 0
             no_remain = remain / (self.env.node - 1)
             for j in range(self.env.node):
-                intention = future_gradient[i][j] * factor + no_remain - self.dummy.queue[i][j]
+                intention = future_gradient[i][j] * self.data_factor * factor + no_remain - self.dummy.queue[i][j]
                 price[i][j] = self.compute_best_price(intention)
             single_action = vehicle_motion[i].copy()
             single_action.extend(price[i])
@@ -434,11 +445,11 @@ class Imitated:
         # vehicle availability * queue ratio * queue_factor * time factor ^ distance
         for i in range(self.env.node):
             potential = 0
-            potential -= sum(queue[i])
-            potential += vehicles[i]
+            potential -= sum(queue[i]) / self.data_factor
+            potential += vehicles[i] / self.data_factor
             for j in range(self.env.node):
                 for k in range(self.env.edge_matrix[j][i] - 1):
-                    potential += mini_vehicles[j][i][k] * self.time_factor ** k
+                    potential += mini_vehicles[j][i][k] * self.time_factor ** k / self.data_factor
             vehicle_potential[i] = potential
 
         # calculate relative potential
@@ -451,7 +462,7 @@ class Imitated:
         for i in range(self.env.node):
             potential = 0
             for j in range(self.env.node):
-                availability = max(0, min(vehicle_diff[j], queue[j][i]))
+                availability = max(0, min(vehicle_diff[j], queue[j][i] / self.data_factor))
                 queue_ratio = 0 if queue[j][i] == 0 else queue[j][i] / sum(queue[j])
                 time_discount = self.time_factor ** self.env.edge_matrix[j][i]
                 potential += availability * queue_ratio * self.queue_factor * time_discount
@@ -475,4 +486,4 @@ class Imitated:
     def compute_best_price(self, intention):
         if intention < 0:
             return 1
-        return max(0.5 + self.env.operating_cost / 2, 1 - intention * self.price_intention)
+        return max(self.operating_cost, 1 - intention * self.price_intention / self.data_factor)
