@@ -9,7 +9,7 @@
   "poisson_cap": 50,
 
   "multi_agent": true,
-  "imitate": true,
+  "imitate": false,
   "average_reward": false,
   "average_queue": 30,
   "average_reset": false,
