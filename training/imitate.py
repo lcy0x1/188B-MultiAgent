@@ -23,3 +23,5 @@ mean = cumulative_reward / n
 var = cumulative_square / n - mean ** 2
 print("mean: ", mean, "stdev: ", math.sqrt(var / n))
 print("average price", average_price / n)
+
+# Testing commit
