@@ -1,6 +1,5 @@
 import math
 import random
-
 from gym_symmetric.envs.symmetric_env import VehicleEnv, Imitated
 
 env = VehicleEnv()
