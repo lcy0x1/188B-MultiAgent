@@ -11,18 +11,18 @@ if __name__ == "__main__":
     act_vehs = []
     act_pris = []
     filename = 'opt'
-    with open(f"./static/{filename}_vehicle.txt", 'r') as in_file:
+    with open(f"../static/{filename}_vehicle.csv", 'r') as in_file:
         reader = csv.reader(in_file, delimiter=',')
         for line in reader:
             act_vehs.append(line)
-    with open(f"./static/{filename}_prices.txt", 'r') as in_file:
+    with open(f"../static/{filename}_prices.csv", 'r') as in_file:
         reader = csv.reader(in_file, delimiter=',')
         for line in reader:
             act_pris.append(line)
     action = [[] for i in range(env.node)]
     for i in range(env.node):
         action[i].extend([float(act_vehs[i][j]) / 10 for j in range(env.node)])
-        action[i].extend([float(act_pris[i][j]) for j in range(env.node)])
+        action[i].extend([float(act_pris[i][j])+0.25 for j in range(env.node)])
 
     n = 1000
     cumulative_reward = 0

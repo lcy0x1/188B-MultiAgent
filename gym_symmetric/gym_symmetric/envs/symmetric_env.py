@@ -95,6 +95,7 @@ class VehicleEnv(gym.Env):
         self.mini_node_layer = self.config["mini_node_layer"]
         self.multi_agent = self.config["multi_agent"]
         self.imitate = imitate and self.config["imitate"]
+        self.reward_factor = self.config["reward_factor"]
 
         self.vehicles = [0 for _ in range(self.node)]
         self.queue = [[0 for _ in range(self.node)] for _ in range(self.node)]
@@ -259,9 +260,9 @@ class VehicleEnv(gym.Env):
                 stats_queue += self.queue[i][j]
 
         reward = rew - op_cost - wait_pen - overf
-        current_reward = reward
+        current_reward = reward / self.reward_factor
         if self.use_average_reward:
-            current_reward -= self.average_reward.average()
+            current_reward -= self.average_reward.average() / self.reward_factor
         self.average_reward.add(reward)
         if self.imitate:
             current_reward = difference
