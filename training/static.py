@@ -15,7 +15,7 @@ if __name__ == "__main__":
         reader = csv.reader(in_file, delimiter=',')
         for line in reader:
             act_vehs.append(line)
-    with open(f"./static/{filename}_prices.txt", 'r') as in_file:
+    with open(f"./static/{filename}_price.txt", 'r') as in_file:
         reader = csv.reader(in_file, delimiter=',')
         for line in reader:
             act_pris.append(line)
