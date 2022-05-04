@@ -4,7 +4,8 @@ from gym_symmetric.envs.symmetric_env import VehicleEnv, Imitated
 
 env = VehicleEnv()
 env.reset()
-env.seed(random.randint(0, 1000000))
+env.seed(5)
+# random.randint(0, 1000000)
 imitate = Imitated(env)
 
 n = 1000
@@ -19,7 +20,7 @@ for cycle in range(n):
     reward = reward
     cumulative_reward += reward
     cumulative_square += reward ** 2
-    average_price += info["price"] / 2
+    average_price += info["price"] * 2
 
 mean = cumulative_reward / n
 var = cumulative_square / n - mean ** 2
