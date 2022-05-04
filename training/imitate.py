@@ -11,6 +11,7 @@ n = 1000
 cumulative_reward = 0
 cumulative_square = 0
 average_price = 0
+act_pris = []
 for cycle in range(n):
     action = imitate.compute_action()
     _, reward, _, info = env.cycle_step(action)
@@ -18,6 +19,8 @@ for cycle in range(n):
     cumulative_reward += reward
     cumulative_square += reward ** 2
     average_price += info["price"]
+    for i in range(env.node):
+        action[i].extend([float(act_pris[i][j]) for j in range(env.node)])
 
 mean = cumulative_reward / n
 var = cumulative_square / n - mean ** 2
