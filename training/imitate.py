@@ -20,7 +20,7 @@ for cycle in range(n):
     reward = reward
     cumulative_reward += reward
     cumulative_square += reward ** 2
-    average_price += info["price"] * 2
+    average_price += info["price"] * 40
 
 mean = cumulative_reward / n
 var = cumulative_square / n - mean ** 2
