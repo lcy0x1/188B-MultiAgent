@@ -14,7 +14,6 @@ average_price = 0
 
 for cycle in range(n):
     action = imitate.compute_action()
-    print(action)
     _, reward, _, info = env.cycle_step(action)
     reward = reward
     cumulative_reward += reward
