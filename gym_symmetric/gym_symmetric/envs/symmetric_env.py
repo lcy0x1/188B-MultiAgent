@@ -377,7 +377,7 @@ class Imitated:
         self.price_intention = 0.2
 
         self.operating_cost = 0.6
-        self.data_factor = 40
+        self.data_factor = 1
 
     def compute_action(self):
         vehicle_gradient = self.compute_gradient(self.env.vehicles, self.env.mini_vehicles, self.env.queue)
