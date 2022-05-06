@@ -27,7 +27,7 @@ with open(f"./static/{filename}_price.txt", 'r') as in_file:
 action = [[] for i in range(env.node)]
 for i in range(env.node):
     action[i].extend([float(act_vehs[i][j]) / 10 for j in range(env.node)])
-    action[i].extend([float(act_pris[i][j]) for j in range(env.node)])
+    action[i].extend([float(act_pris[i][j]) / 10 for j in range(env.node)])
 
 for cycle in range(n):
     # action = imitate.compute_action()
