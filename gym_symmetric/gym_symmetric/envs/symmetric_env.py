@@ -103,14 +103,18 @@ class VehicleEnv(gym.Env):
         # Attempt at edge initialization
         # Edge matrix: self.edge(0) = 1->2 , self.edge(1) = 2->1     for 2 node case (2 edges)
         # n nodes: self.edge(0) = 1->2 , 1->3 , ... 1->n , 2->1 , 2->3, ... 2->n , ... n->n-2 , n->n-1  (? edges)
-        self.edge_list = self.config["edge_lengths"]
-        self.demand_list = self.config["demand_factor"]
-        self.price_list = self.config["price_factor"]
         self.edge_matrix = [[0 for _ in range(self.node)] for _ in range(self.node)]
         self.demand_factor = [[0 for _ in range(self.node)] for _ in range(self.node)]
         self.price_factor = [[0 for _ in range(self.node)] for _ in range(self.node)]
         self.bounds = [0 for _ in range(self.node)]
-        self.fill_edge_matrix()
+        self.custom_edge = self.config["custom_edge"]
+        self.edge_list = self.config["edge_lengths"]
+        if self.custom_edge:
+            self.demand_list = self.config["demand_factor"]
+            self.price_list = self.config["price_factor"]
+            self.fill_edge_matrix()
+        else:
+            self.create_matrix()
         self.max_edge = max(self.bounds)
 
         self.current_index = 0
@@ -171,6 +175,16 @@ class VehicleEnv(gym.Env):
                 if self.edge_matrix[i][j] % 1 != 0:
                     print("Error! Edge length must be integer value.")
                     sys.exit()
+
+    def create_matrix(self):
+        tmp = 0
+        for i in range(self.node):
+            for j in range(self.node):
+                self.edge_matrix[i][j] = self.edge_list[tmp]
+                self.price_factor[i][j] = self.edge_list[tmp]
+                self.demand_factor[i][j] = -self.edge_list[tmp] ** 2
+                self.bounds[j] = max(self.bounds[j], self.edge_matrix[i][j])
+                tmp += 1
 
     def step(self, act):
         if self.multi_agent:

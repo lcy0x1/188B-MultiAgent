@@ -7,14 +7,14 @@ env.reset()
 env.seed(random.randint(0, 1000000))
 imitate = Imitated(env)
 
-n = 1000
+n = 300
 cumulative_reward = 0
 cumulative_square = 0
 average_price = 0
 for cycle in range(n):
     action = imitate.compute_action()
     _, reward, _, info = env.cycle_step(action)
-    reward = reward
+    reward = info["reward"]
     cumulative_reward += reward
     cumulative_square += reward ** 2
     average_price += info["price"]
