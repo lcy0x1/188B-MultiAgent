@@ -59,7 +59,7 @@ if __name__ == "__main__":
     # model.set_env(env)
 
     nid = "single-agent"
-    dire = f"./data/n8v1500_opcost3/{network_type}-lrm{lrate}/"
+    dire = f"./data/n8v1500_opcost5/{network_type}-lrm{lrate}/"
 
     debug_info = ["reward", "queue", "price", "gain", "operating_cost", "wait_penalty", "overflow", "imitation_reward"]
 
