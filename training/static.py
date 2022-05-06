@@ -22,7 +22,7 @@ if __name__ == "__main__":
     action = [[] for i in range(env.node)]
     for i in range(env.node):
         action[i].extend([float(act_vehs[i][j]) for j in range(env.node)])
-        action[i].extend([float(act_pris[i][j]) / 0.63 for j in range(env.node)])
+        action[i].extend([float(act_pris[i][j]) / 0.62 for j in range(env.node)])
 
     n = 1000
     cumulative_reward = 0
