@@ -1,14 +1,14 @@
 {
       "node": 8,
-      "vehicle": 2000,
+      "vehicle": 1000,
       "max_queue": 300,
       "poisson_param": 1,
-      "operation_cost": 5,
+      "operation_cost": 1,
       "waiting_penalty": 2,
       "overflow": 100,
       "poisson_cap": 50,
 
-      "multi_agent": false,
+      "multi_agent": true,
       "imitate": false,
       "average_reward": false,
       "average_queue": 30,

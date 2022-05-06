@@ -58,8 +58,8 @@ if __name__ == "__main__":
     # model = PPO.load("./data/1mil")
     # model.set_env(env)
 
-    nid = "single-agent"
-    dire = f"./data/n8v2000_opcost5/{network_type}-lrm{lrate}/"
+    nid = "multi-agent"
+    dire = f"./data/n8v1000_opcost1/{network_type}-lrm{lrate}/"
 
     debug_info = ["reward", "queue", "price", "gain", "operating_cost", "wait_penalty", "overflow", "imitation_reward"]
 
