@@ -16,6 +16,7 @@
   "average_reset": false,
   "include_edge": false,
   "mini_node_layer": 1,
+  "custom_edge": true,
 
   "edge_lengths": [
     0,1,2,3,1,2,3,4,2,3,4,5,3,4,5,6,
